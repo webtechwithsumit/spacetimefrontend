@@ -1,15 +1,7 @@
 import Link from "next/link";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/live-auctions", label: "Live Auctions" },
-  { href: "/properties", label: "Properties" },
-  { href: "/for-buyers", label: "For Buyers" },
-  { href: "/for-sellers", label: "For Sellers" },
-  { href: "/for-brokers", label: "For Brokers" },
-];
+import { siteNavItems } from "@/constants/site-nav";
 
 export function Header() {
   return (
@@ -26,7 +18,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
-          {navLinks.map((link) => (
+          {siteNavItems.map((link) => (
             <Link
               key={link.href}
               href={link.href}

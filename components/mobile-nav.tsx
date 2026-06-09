@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/live-auctions", label: "Live Auctions" },
-  { href: "/properties", label: "Properties" },
-  { href: "/for-buyers", label: "For Buyers" },
-  { href: "/for-sellers", label: "For Sellers" },
-  { href: "/for-brokers", label: "For Brokers" },
-];
+import { siteNavItems } from "@/constants/site-nav";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -52,7 +44,7 @@ export function MobileNav() {
       {open && (
         <nav className="absolute left-0 right-0 top-16 z-50 border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-black">
           <ul className="flex flex-col gap-4">
-            {navLinks.map((link) => (
+            {siteNavItems.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}

@@ -1,12 +1,7 @@
 import Link from "next/link";
+import { siteNavItems } from "@/constants/site-nav";
 
-const platformLinks = [
-  { href: "/live-auctions", label: "Live Auctions" },
-  { href: "/properties", label: "Properties" },
-  { href: "/for-buyers", label: "For Buyers" },
-  { href: "/for-sellers", label: "For Sellers" },
-  { href: "/for-brokers", label: "For Brokers" },
-];
+const platformLinks = siteNavItems.filter((item) => item.href !== "/");
 
 const companyLinks = [
   { href: "/about", label: "About Us" },
