@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { dashboardNavItems } from "@/dashboard/constants/nav-items";
 
-const linkClassName =
-  "rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white";
+const bottomLinkClassName =
+  "whitespace-nowrap rounded-lg px-2 py-2 text-center text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -22,11 +22,10 @@ export function DashboardSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive
+              className={`rounded-lg px-3 py-2 text-sm transition-colors ${isActive
                   ? "bg-zinc-100 font-medium text-zinc-900 dark:bg-zinc-900 dark:text-white"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"
-              }`}
+                }`}
             >
               {item.label}
             </Link>
@@ -34,13 +33,42 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      <div className="flex flex-col gap-1 border-t border-zinc-200 p-4 dark:border-zinc-800/60">
-        <Link href="/" className={linkClassName}>
-          Back to Home
-        </Link>
-        <Link href="/login" className={linkClassName}>
-          Logout
-        </Link>
+      <div className="border-t border-zinc-200 p-4 dark:border-zinc-800/60">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+            GU
+          </span>
+          <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900 dark:text-white">
+            Guest User
+          </p>
+          <Link
+            href="/dashboard/profile"
+            title="Profile"
+            aria-label="Profile"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="size-4"
+            >
+              <circle cx="12" cy="8" r="3" />
+              <path d="M6 20v-1a6 6 0 0 1 12 0v1" />
+            </svg>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Link href="/" className={bottomLinkClassName}>
+            Back to Home
+          </Link>
+          <Link href="/login" className={bottomLinkClassName}>
+            Logout
+          </Link>
+        </div>
       </div>
     </aside>
   );

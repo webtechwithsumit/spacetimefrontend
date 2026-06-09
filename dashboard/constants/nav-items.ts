@@ -11,5 +11,4 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { href: "/dashboard/buyers", label: "Buyers" },
   { href: "/dashboard/sellers", label: "Sellers" },
   { href: "/dashboard/brokers", label: "Brokers" },
-  { href: "/dashboard/settings", label: "Settings" },
 ];
