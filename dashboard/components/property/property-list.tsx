@@ -269,7 +269,7 @@ export function PropertyList() {
 
       {!canManage && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-          Only Seller or Admin can create properties. You can view all listings below.
+          Only Seller or Broker can create and manage their own properties. You can view all listings below.
         </div>
       )}
 

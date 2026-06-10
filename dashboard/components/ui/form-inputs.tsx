@@ -7,9 +7,10 @@ type TextInputProps = {
   id: string;
   label?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  readOnly?: boolean;
   className?: string;
 };
 
@@ -20,6 +21,7 @@ export function TextInput({
   onChange,
   placeholder,
   required,
+  readOnly,
   className,
 }: TextInputProps) {
   return (
@@ -33,9 +35,12 @@ export function TextInput({
         id={id}
         type="text"
         required={required}
+        readOnly={readOnly}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={className ?? inputClass}
+        onChange={
+          onChange ? (e) => onChange(e.target.value) : undefined
+        }
+        className={`${className ?? inputClass}${readOnly ? " read-only:text-zinc-500 dark:read-only:text-zinc-400" : ""}`}
         placeholder={placeholder}
       />
     </div>

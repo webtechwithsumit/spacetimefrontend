@@ -40,15 +40,18 @@ export const dashboardNavItems: DashboardNavItem[] = [
   },
   {
     id: "auctions",
-    label: "Auctions",
+    label: "Live Auctions",
     href: "/dashboard/auctions",
     icon: <AuctionsIcon />,
+    description: "Browse and bid on live property auctions",
   },
   {
     id: "properties",
     label: "Properties",
     href: "/dashboard/property",
     icon: <PropertiesIcon />,
+    roles: ["Seller", "Broker", "Admin", "Super-Admin"],
+    description: "Manage your property listings",
   },
   {
     id: "buyers",

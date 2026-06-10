@@ -6,6 +6,7 @@ export type PropertyFormState = {
   description: string;
   category: string;
   status: string;
+  occupancyStatus: string;
   address: string;
   city: string;
   state: string;
@@ -40,6 +41,7 @@ export const emptyPropertyForm = (): PropertyFormState => ({
   description: "",
   category: "",
   status: "Draft",
+  occupancyStatus: "",
   address: "",
   city: "",
   state: "",
@@ -77,6 +79,7 @@ export function mapPropertyToForm(
     description: property.description ?? "",
     category: property.category ?? "",
     status: property.status ?? "Draft",
+    occupancyStatus: property.occupancyStatus ?? "",
     address: property.address ?? "",
     city: property.city ?? "",
     state: property.state ?? "",

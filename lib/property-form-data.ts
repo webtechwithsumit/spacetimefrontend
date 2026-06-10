@@ -25,7 +25,7 @@ export function buildBasicStepPayload(form: PropertyFormState) {
     title: trim(form.title),
     description: trim(form.description),
     category: trim(form.category),
-    status: trim(form.status),
+    occupancyStatus: trim(form.occupancyStatus),
     address: trim(form.address),
     city: trim(form.city),
     state: trim(form.state),

@@ -11,6 +11,8 @@ type FormWizardFooterProps = {
   cancelHref: string;
   onPrevious: () => void;
   onSave: () => void;
+  minStep?: number;
+  continueLabel?: string;
 };
 
 export function FormWizardFooter({
@@ -20,10 +22,17 @@ export function FormWizardFooter({
   cancelHref,
   onPrevious,
   onSave,
+  minStep = 1,
+  continueLabel,
 }: FormWizardFooterProps) {
+  const primaryLabel = pending
+    ? "Saving..."
+    : (continueLabel ??
+      (step === totalSteps ? "Save & Finish" : "Save & Continue"));
+
   return (
     <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-zinc-100 pt-6 dark:border-zinc-800">
-      {step > 1 && (
+      {step > minStep && (
         <button
           type="button"
           disabled={pending}
@@ -40,11 +49,7 @@ export function FormWizardFooter({
         onClick={onSave}
         className={btnPrimaryClass}
       >
-        {pending
-          ? "Saving..."
-          : step === totalSteps
-            ? "Save & Finish"
-            : "Save & Continue"}
+        {primaryLabel}
       </button>
 
       <Link href={cancelHref} className={`ml-auto ${btnSecondaryClass}`}>

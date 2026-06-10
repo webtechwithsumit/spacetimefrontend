@@ -1,6 +1,7 @@
 "use client";
 
 import { PropertyBasicFields } from "@/dashboard/components/property/property-basic-fields";
+import { PropertyOccupancySetup } from "@/dashboard/components/property/property-occupancy-setup";
 import { PropertyFinancialStepFields } from "@/dashboard/components/property/property-financial-step-fields";
 import { PropertyFormSteps } from "@/dashboard/components/property/property-form-steps";
 import { PropertyPlotFields } from "@/dashboard/components/property/property-plot-fields";
@@ -13,7 +14,10 @@ import {
   cardClass,
   FormWizardFooter,
 } from "@/dashboard/components/ui";
-import { PROPERTY_TOTAL_STEPS } from "@/dashboard/components/property/use-property-form-wizard";
+import {
+  PROPERTY_OCCUPANCY_STEP,
+  PROPERTY_TOTAL_STEPS,
+} from "@/dashboard/components/property/use-property-form-wizard";
 
 type PropertyFormWizardProps = {
   step: number;
@@ -36,7 +40,7 @@ type PropertyFormWizardProps = {
   onPrevious: () => void;
   onSave: () => void;
   categoryOptions?: string[];
-  statusOptions?: string[];
+  mode?: "create" | "edit";
 };
 
 export function PropertyFormWizard({
@@ -60,23 +64,34 @@ export function PropertyFormWizard({
   onPrevious,
   onSave,
   categoryOptions,
-  statusOptions,
+  mode = "create",
 }: PropertyFormWizardProps) {
+  const showStepper = step >= 1;
+  const footerMinStep = mode === "create" ? PROPERTY_OCCUPANCY_STEP : 1;
+
   return (
     <div className={cardClass}>
-      <PropertyFormSteps
-        currentStep={step}
-        maxStep={maxStep}
-        onStepClick={onStepClick}
-      />
+      {showStepper && (
+        <PropertyFormSteps
+          currentStep={step}
+          maxStep={maxStep}
+          onStepClick={onStepClick}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {step === PROPERTY_OCCUPANCY_STEP && (
+          <PropertyOccupancySetup
+            value={form.occupancyStatus}
+            onChange={(value) => onFieldChange("occupancyStatus", value)}
+          />
+        )}
+
         {step === 1 && (
           <PropertyBasicFields
             form={form}
             onFieldChange={onFieldChange}
             categoryOptions={categoryOptions}
-            statusOptions={statusOptions}
           />
         )}
 
@@ -131,6 +146,10 @@ export function PropertyFormWizard({
         totalSteps={PROPERTY_TOTAL_STEPS}
         pending={pending}
         cancelHref="/dashboard/property"
+        minStep={footerMinStep}
+        continueLabel={
+          step === PROPERTY_OCCUPANCY_STEP ? "Continue" : undefined
+        }
         onPrevious={onPrevious}
         onSave={onSave}
       />

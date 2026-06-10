@@ -1,64 +1,4 @@
-import { AuctionCard } from "@/components/auction-card";
-import type { Auction } from "@/components/auction-card";
-
-const liveAuctions: Auction[] = [
-  {
-    id: "1",
-    image:
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
-    imageAlt: "Grade-A Office Tower in BKC, Mumbai",
-    category: "Commercial Office",
-    title: "Grade-A Office Tower",
-    location: "BKC, Mumbai",
-    endsAt: new Date(
-      Date.now() + 1 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
-    ).toISOString(),
-    currentBid: "₹46.8 Cr",
-    startingBid: "₹42 Cr",
-    isLive: true,
-  },
-  {
-    id: "2",
-    image:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
-    imageAlt: "Logistics Hub in Gurgaon",
-    category: "Industrial",
-    title: "Logistics Hub",
-    location: "Gurgaon",
-    endsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    currentBid: "₹28.5 Cr",
-    startingBid: "₹25 Cr",
-    isLive: true,
-  },
-  {
-    id: "3",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
-    imageAlt: "High-Street Retail in Bandra",
-    category: "Retail",
-    title: "High-Street Retail",
-    location: "Bandra",
-    endsAt: new Date(
-      Date.now() + 3 * 24 * 60 * 60 * 1000 + 5 * 60 * 60 * 1000,
-    ).toISOString(),
-    currentBid: "₹18.2 Cr",
-    startingBid: "₹15 Cr",
-    isLive: true,
-  },
-  {
-    id: "4",
-    image:
-      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80",
-    imageAlt: "Land Parcel in Pune",
-    category: "Land",
-    title: "Land Parcel",
-    location: "Pune",
-    endsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    currentBid: "₹12.4 Cr",
-    startingBid: "₹10 Cr",
-    isLive: true,
-  },
-];
+import { LiveAuctionsList } from "@/components/live-auctions-list";
 
 export default function AuctionsPage() {
   return (
@@ -90,11 +30,7 @@ export default function AuctionsPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {liveAuctions.map((auction) => (
-            <AuctionCard key={auction.id} auction={auction} />
-          ))}
-        </div>
+        <LiveAuctionsList gridClassName="sm:grid-cols-2 xl:grid-cols-4" skeletonCount={4} />
       </section>
     </main>
   );

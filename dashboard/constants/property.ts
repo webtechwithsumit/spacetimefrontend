@@ -1,17 +1,12 @@
 export const PROPERTY_CATEGORIES = [
+  "Commercial Office Space",
   "Independent Building (Commercial office)",
-  "Office Space",
-  "Retail Shop",
-  "Warehouse",
-  "Residential Apartment",
-  "Independent House / Villa",
-  "Plot / Land",
-  "Industrial",
-  "Residential",
-  "Commercial",
-  "Land",
-  "Retail",
+  "Independent Building (Industrial)",
+  "Independent Building (Retail)",
+  "Retail Space",
 ] as const;
+
+export const OCCUPANCY_STATUSES = ["Vacant", "Pre-Rented"] as const;
 
 export const PROPERTY_STATUSES = [
   "Draft",
@@ -23,8 +18,14 @@ export const PROPERTY_STATUSES = [
 
 export type PropertyCategory = (typeof PROPERTY_CATEGORIES)[number];
 export type PropertyStatus = (typeof PROPERTY_STATUSES)[number];
+export type OccupancyStatus = (typeof OCCUPANCY_STATUSES)[number];
 
-export const PROPERTY_MANAGER_ROLES = ["Seller", "Admin", "Super-Admin"];
+export const PROPERTY_MANAGER_ROLES = [
+  "Seller",
+  "Broker",
+  "Admin",
+  "Super-Admin",
+];
 
 export const ADMIN_ROLES = ["Admin", "Super-Admin"] as const;
 

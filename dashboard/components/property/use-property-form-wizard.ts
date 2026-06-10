@@ -24,6 +24,7 @@ import {
 } from "@/lib/property-form-data";
 
 export const PROPERTY_TOTAL_STEPS = 5;
+export const PROPERTY_OCCUPANCY_STEP = 0;
 
 type UsePropertyFormWizardOptions = {
   mode: "create" | "edit";
@@ -51,8 +52,12 @@ export function usePropertyFormWizard({
   );
   const [approvalsInPlace, setApprovalsInPlace] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
-  const [step, setStep] = useState(1);
-  const [maxStep, setMaxStep] = useState(mode === "edit" ? PROPERTY_TOTAL_STEPS : 1);
+  const [step, setStep] = useState(
+    mode === "create" ? PROPERTY_OCCUPANCY_STEP : 1,
+  );
+  const [maxStep, setMaxStep] = useState(
+    mode === "edit" ? PROPERTY_TOTAL_STEPS : PROPERTY_OCCUPANCY_STEP,
+  );
 
   function updateField(field: keyof PropertyFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -90,7 +95,19 @@ export function usePropertyFormWizard({
     [],
   );
 
+  function validateOccupancyStep() {
+    if (!form.occupancyStatus.trim()) {
+      toast.error("Occupancy status is required");
+      return false;
+    }
+    return true;
+  }
+
   function validateBasicStep() {
+    if (!form.occupancyStatus.trim()) {
+      toast.error("Occupancy status is required");
+      return false;
+    }
     if (!form.title.trim()) {
       toast.error("Title is required");
       return false;
@@ -99,6 +116,13 @@ export function usePropertyFormWizard({
       toast.error("Category is required");
       return false;
     }
+    return true;
+  }
+
+  function continueFromOccupancyStep() {
+    if (!validateOccupancyStep()) return false;
+    setStep(1);
+    setMaxStep((prev) => Math.max(prev, 1));
     return true;
   }
 
@@ -280,6 +304,10 @@ export function usePropertyFormWizard({
   }
 
   async function handleSaveAndContinue() {
+    if (step === PROPERTY_OCCUPANCY_STEP) {
+      continueFromOccupancyStep();
+      return;
+    }
     if (step === 1) {
       await saveBasicStep(true);
       return;
@@ -301,6 +329,7 @@ export function usePropertyFormWizard({
   }
 
   function handleStepClick(targetStep: number) {
+    if (targetStep < 1) return;
     if (targetStep <= maxStep) setStep(targetStep);
   }
 

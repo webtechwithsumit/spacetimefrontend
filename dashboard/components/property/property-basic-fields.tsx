@@ -10,17 +10,12 @@ import {
   withCurrentOption,
 } from "@/dashboard/components/ui";
 import { inputClass } from "@/dashboard/components/ui/form-styles";
-import {
-  INDIAN_STATES,
-  PROPERTY_CATEGORIES,
-  PROPERTY_STATUSES,
-} from "@/dashboard/constants/property";
+import { INDIAN_STATES, PROPERTY_CATEGORIES } from "@/dashboard/constants/property";
 
 type PropertyBasicFieldsProps = {
   form: PropertyFormState;
   onFieldChange: (field: keyof PropertyFormState, value: string) => void;
   categoryOptions?: string[];
-  statusOptions?: string[];
   stateOptions?: string[];
 };
 
@@ -28,18 +23,36 @@ export function PropertyBasicFields({
   form,
   onFieldChange,
   categoryOptions,
-  statusOptions,
   stateOptions,
 }: PropertyBasicFieldsProps) {
   const toast = useToast();
   const categories =
     categoryOptions ?? withCurrentOption(form.category, PROPERTY_CATEGORIES);
-  const statuses =
-    statusOptions ?? withCurrentOption(form.status, PROPERTY_STATUSES);
   const states = stateOptions ?? withCurrentOption(form.state, INDIAN_STATES);
 
   return (
     <div className="space-y-4 sm:col-span-2">
+      <FormSection title="Category & Status">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField
+            id="category"
+            label="Category"
+            value={form.category}
+            onChange={(value) => onFieldChange("category", value)}
+            options={categories}
+            placeholder="Select category"
+          />
+
+          <TextInput
+            id="occupancyStatus"
+            label="Occupancy Status"
+            value={form.occupancyStatus}
+            readOnly
+            placeholder="Set in previous step"
+          />
+        </div>
+      </FormSection>
+
       <FormSection title="1. Basic & Location Details">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <TextInput
@@ -51,17 +64,11 @@ export function PropertyBasicFields({
             placeholder="Property title"
           />
 
-          <SelectField
-            id="category"
-            label="Category"
-            value={form.category}
-            onChange={(value) => onFieldChange("category", value)}
-            options={categories}
-            placeholder="Select category"
-          />
-
           <div className="sm:col-span-2 lg:col-span-3">
-            <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label
+              htmlFor="address"
+              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
               Address &amp; Location
             </label>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -164,16 +171,6 @@ export function PropertyBasicFields({
               placeholder="Property details..."
             />
           </div>
-
-          <SelectField
-            id="status"
-            label="Listing Status"
-            value={form.status}
-            onChange={(value) => onFieldChange("status", value)}
-            options={statuses}
-            placeholder="Select status"
-            clearable={false}
-          />
         </div>
       </FormSection>
     </div>

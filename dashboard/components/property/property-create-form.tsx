@@ -19,7 +19,7 @@ export function PropertyCreateForm() {
           title="Create Property"
           description="Add a new property listing."
         />
-        <AlertBanner message="Seller or Admin access required to create properties." />
+        <AlertBanner message="Seller or Broker access required to create properties." />
       </div>
     );
   }
@@ -34,6 +34,7 @@ export function PropertyCreateForm() {
       />
 
       <PropertyFormWizard
+        mode="create"
         step={wizard.step}
         maxStep={wizard.maxStep}
         pending={wizard.pending}

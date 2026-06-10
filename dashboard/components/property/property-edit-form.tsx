@@ -22,7 +22,6 @@ import {
 import {
   PROPERTY_CATEGORIES,
   PROPERTY_MANAGER_ROLES,
-  PROPERTY_STATUSES,
 } from "@/dashboard/constants/property";
 import { api, getApiErrorMessage } from "@/lib/api";
 
@@ -79,7 +78,7 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
           title="Edit Property"
           description="Update property listing details."
         />
-        <AlertBanner message="Seller or Admin access required to edit properties." />
+        <AlertBanner message="You can only edit properties that you own." />
       </div>
     );
   }
@@ -130,6 +129,7 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
       )}
 
       <PropertyFormWizard
+        mode="edit"
         step={wizard.step}
         maxStep={wizard.maxStep}
         pending={wizard.pending}
@@ -153,7 +153,6 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
           wizard.form.category,
           PROPERTY_CATEGORIES,
         )}
-        statusOptions={withCurrentOption(wizard.form.status, PROPERTY_STATUSES)}
       />
     </div>
   );

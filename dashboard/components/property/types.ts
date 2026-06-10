@@ -54,6 +54,7 @@ export type DashboardProperty = {
   propertyTax?: string;
   estimatedMonthlyMaintenance?: string;
   status: string;
+  occupancyStatus?: string;
   yearBuiltRenovated?: string;
   tags?: string[];
   amenities?: string;
