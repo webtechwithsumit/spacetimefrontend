@@ -7,19 +7,49 @@ export type PropertySeller = {
   role?: string;
 };
 
+export type PropertyLegalDocuments = {
+  titleDeed: string[];
+  propertyTaxReceipts: string[];
+  occupancyCertificate: string[];
+  floorPlan: string[];
+  approvalsInPlace: string[];
+};
+
 export type DashboardProperty = {
   _id: string;
   title: string;
   description?: string;
   images?: string[];
+  legalDocuments?: PropertyLegalDocuments | string[];
+  flyers?: string[];
   address?: string;
   city?: string;
   state?: string;
   pincode?: string;
+  plotNumber?: string;
+  microMarketLocality?: string;
+  buildingName?: string;
+  roadName?: string;
   category: string;
   buildingType?: string;
   area?: string;
+  plotArea?: string;
+  plotAreaUnit?: string;
+  totalCarpetArea?: string;
+  superArea?: string;
+  totalFloorsInBuilding?: string;
+  floorsOffered?: string;
+  totalCarParks?: string;
+  carParkingIncluded?: string;
+  parkingTypes?: string[];
+  constructionStatus?: string;
+  ageOfProperty?: string;
+  furnishingStatus?: string;
+  furnishingOther?: string;
+  totalPrice?: string;
   pricePerSqft?: string;
+  propertyTax?: string;
+  estimatedMonthlyMaintenance?: string;
   status: string;
   sellerId?: PropertySeller | string;
   createdAt?: string;

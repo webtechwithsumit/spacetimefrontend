@@ -2,8 +2,11 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { MediaFilePicker } from "@/components/media-file-picker";
 import { useToast } from "@/components/toast-provider";
+import { getMediaUrl } from "@/lib/media";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { buildProfileFormData } from "@/lib/profile-form-data";
 import type { AuthUser } from "@/lib/auth";
 import { getUserInitials } from "@/lib/auth";
 
@@ -28,6 +31,7 @@ const emptyForm = {
   phone: "",
   image: "",
   aadharNo: "",
+  kycDocuments: [] as string[],
   password: "",
   currentPassword: "",
 };
@@ -123,6 +127,10 @@ export function ProfileForm() {
   const [editing, setEditing] = useState(false);
   const [showAadhar, setShowAadhar] = useState(false);
   const [pending, setPending] = useState(false);
+  const [existingImage, setExistingImage] = useState("");
+  const [existingKycDocuments, setExistingKycDocuments] = useState<string[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [kycFiles, setKycFiles] = useState<File[]>([]);
 
   const fetchProfile = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -133,15 +141,22 @@ export function ProfileForm() {
         toast.error(data.message || "Failed to load profile");
         return;
       }
+      const image = data.data.image ?? "";
+      const kycDocuments = data.data.kycDocuments ?? [];
       setForm({
         name: data.data.name ?? "",
         email: data.data.email ?? "",
         phone: data.data.phone ?? "",
-        image: data.data.image ?? "",
+        image,
         aadharNo: data.data.aadharNo ?? "",
+        kycDocuments,
         password: "",
         currentPassword: "",
       });
+      setExistingImage(image);
+      setExistingKycDocuments(kycDocuments);
+      setImageFile(null);
+      setKycFiles([]);
       setRole(data.data.role ?? "");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -161,17 +176,24 @@ export function ProfileForm() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
-    const payload: Record<string, string> = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      image: form.image.trim(),
-      aadharNo: form.aadharNo.trim(),
-    };
-    if (form.password) {
-      payload.password = form.password;
-      payload.currentPassword = form.currentPassword;
-    }
+
+    const payload = buildProfileFormData(
+      {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        aadharNo: form.aadharNo.trim(),
+        password: form.password || undefined,
+        currentPassword: form.currentPassword || undefined,
+      },
+      {
+        existingImage,
+        existingKycDocuments,
+        imageFile,
+        kycFiles,
+      },
+    );
+
     try {
       const { data } = await api.put<ProfileResponse>("/api/profile", payload);
       if (!data.success || !data.data) {
@@ -180,16 +202,23 @@ export function ProfileForm() {
         return;
       }
       updateUser(data.data);
+      const image = data.data.image ?? "";
+      const kycDocuments = data.data.kycDocuments ?? [];
       setForm((prev) => ({
         ...prev,
         name: data.data!.name ?? "",
         email: data.data!.email ?? "",
         phone: data.data!.phone ?? "",
-        image: data.data!.image ?? "",
+        image,
         aadharNo: data.data!.aadharNo ?? "",
+        kycDocuments,
         password: "",
         currentPassword: "",
       }));
+      setExistingImage(image);
+      setExistingKycDocuments(kycDocuments);
+      setImageFile(null);
+      setKycFiles([]);
       toast.success(data.message || "Profile updated successfully");
       setEditing(false);
     } catch (error) {
@@ -227,9 +256,9 @@ export function ProfileForm() {
             <div className="flex items-center gap-5">
               <div className="relative">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 opacity-70 blur-sm" />
-                {form.image ? (
+                {(existingImage || imageFile) ? (
                   <img
-                    src={form.image}
+                    src={imageFile ? URL.createObjectURL(imageFile) : getMediaUrl(existingImage || form.image)}
                     alt={form.name || "Profile"}
                     className="relative size-24 rounded-full border-[3px] border-white object-cover shadow-lg dark:border-zinc-900"
                   />
@@ -371,12 +400,39 @@ export function ProfileForm() {
                   <input id="phone" type="tel" required value={form.phone} onChange={(e) => updateField("phone", e.target.value)} className={inputClass} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label htmlFor="image" className={labelClass}>Profile Image URL</label>
-                  <input id="image" type="url" value={form.image} onChange={(e) => updateField("image", e.target.value)} className={inputClass} placeholder="https://example.com/photo.jpg" />
+                  <MediaFilePicker
+                    label="Profile Photo"
+                    entityName={form.name}
+                    requireEntityName
+                    existingUrls={existingImage ? [existingImage] : []}
+                    pendingFiles={imageFile ? [imageFile] : []}
+                    onExistingChange={(urls) => {
+                      setExistingImage(urls[0] ?? "");
+                      setForm((prev) => ({ ...prev, image: urls[0] ?? "" }));
+                    }}
+                    onPendingChange={(files) => setImageFile(files[0] ?? null)}
+                    multiple={false}
+                    accept="image/*"
+                  />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="aadharNo" className={labelClass}>Aadhar Number</label>
                   <input id="aadharNo" type="text" inputMode="numeric" maxLength={12} value={form.aadharNo} onChange={(e) => updateField("aadharNo", e.target.value)} className={inputClass} placeholder="123456789012" />
+                </div>
+                <div className="sm:col-span-2">
+                  <MediaFilePicker
+                    label="KYC Documents"
+                    entityName={form.name}
+                    requireEntityName
+                    existingUrls={existingKycDocuments}
+                    pendingFiles={kycFiles}
+                    onExistingChange={(urls) => {
+                      setExistingKycDocuments(urls);
+                      setForm((prev) => ({ ...prev, kycDocuments: urls }));
+                    }}
+                    onPendingChange={setKycFiles}
+                    accept="image/*,application/pdf"
+                  />
                 </div>
               </div>
 
@@ -452,7 +508,7 @@ export function ProfileForm() {
               <div>
                 <p className="text-sm font-semibold text-zinc-900 dark:text-white">Editable Fields</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                  Update name, email, mobile, image URL, and Aadhar. Password change needs your current password.
+                  Update name, email, mobile, profile photo, KYC docs, and Aadhar. Files upload when you click Save.
                 </p>
               </div>
             </div>

@@ -14,12 +14,12 @@ export function DashboardSidebar() {
   const initials = user ? getUserInitials(user.name) : "GU";
 
   return (
-    <aside className="hidden min-h-screen w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-black lg:flex">
-      <nav className="flex flex-1 flex-col gap-1 p-4">
+    <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-black lg:flex">
+      <nav className="min-h-0 flex-1 overflow-y-auto p-4">
         <DashboardNavLinks />
       </nav>
 
-      <div className="border-t border-zinc-200 p-4 dark:border-zinc-800/60">
+      <div className="shrink-0 border-t border-zinc-200 p-4 dark:border-zinc-800/60">
         <div className="mb-3 flex items-center gap-2">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
             {initials}

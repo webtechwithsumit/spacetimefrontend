@@ -6,6 +6,7 @@ export type AuthUser = {
   role?: string;
   image?: string;
   aadharNo?: string;
+  kycDocuments?: string[];
 };
 
 const TOKEN_KEY = "spacetime_token";

@@ -1,15 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
 import { PageHeader } from "@/dashboard/components/page-header";
+import { PropertyBasicFields } from "@/dashboard/components/property/property-basic-fields";
+import { PropertyFinancialStepFields } from "@/dashboard/components/property/property-financial-step-fields";
+import { PropertyPlotFields } from "@/dashboard/components/property/property-plot-fields";
+import { PropertyStatusFields } from "@/dashboard/components/property/property-status-fields";
+import {
+  emptyPropertyForm,
+  mapPropertyToForm,
+  type PropertyFormState,
+} from "@/dashboard/components/property/property-form";
+import {
+  emptyLegalDocumentFiles,
+  emptyLegalDocuments,
+  normalizeLegalDocuments,
+} from "@/dashboard/components/property/legal-documents";
+import { PropertyFormSteps } from "@/dashboard/components/property/property-form-steps";
+import { PropertyUploadSections } from "@/dashboard/components/property/property-upload-sections";
 import {
   canEditProperty,
   cardClass,
-  inputClass,
-  labelClass,
   PropertyResponse,
 } from "@/dashboard/components/property/types";
 import {
@@ -18,31 +33,31 @@ import {
   PROPERTY_STATUSES,
 } from "@/dashboard/constants/property";
 import { api, getApiErrorMessage } from "@/lib/api";
+import {
+  buildBasicStepPayload,
+  buildFinancialStepPayload,
+  buildMediaStepFormData,
+  buildPlotStepPayload,
+  buildStatusStepPayload,
+} from "@/lib/property-form-data";
 
-const emptyForm = {
-  title: "",
-  description: "",
-  images: "",
-  address: "",
-  city: "",
-  state: "",
-  pincode: "",
-  category: "",
-  buildingType: "",
-  area: "",
-  pricePerSqft: "",
-  status: "",
-};
+const TOTAL_STEPS = 5;
 
 function categoryOptions(current: string) {
-  if (current && !PROPERTY_CATEGORIES.includes(current as (typeof PROPERTY_CATEGORIES)[number])) {
+  if (
+    current &&
+    !PROPERTY_CATEGORIES.includes(current as (typeof PROPERTY_CATEGORIES)[number])
+  ) {
     return [current, ...PROPERTY_CATEGORIES];
   }
   return [...PROPERTY_CATEGORIES];
 }
 
 function statusOptions(current: string) {
-  if (current && !PROPERTY_STATUSES.includes(current as (typeof PROPERTY_STATUSES)[number])) {
+  if (
+    current &&
+    !PROPERTY_STATUSES.includes(current as (typeof PROPERTY_STATUSES)[number])
+  ) {
     return [current, ...PROPERTY_STATUSES];
   }
   return [...PROPERTY_STATUSES];
@@ -53,13 +68,25 @@ type PropertyEditFormProps = {
 };
 
 export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
+  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<PropertyFormState>(emptyPropertyForm());
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingLegalDocuments, setExistingLegalDocuments] = useState(
+    emptyLegalDocuments(),
+  );
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [legalDocumentFiles, setLegalDocumentFiles] = useState(
+    emptyLegalDocumentFiles(),
+  );
+  const [approvalsInPlace, setApprovalsInPlace] = useState<string[]>([]);
   const [sellerId, setSellerId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
+  const [step, setStep] = useState(1);
+  const [maxStep, setMaxStep] = useState(1);
 
   const canEdit = canEditProperty(user?.role, user?._id, sellerId || undefined);
 
@@ -78,22 +105,17 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
         typeof property.sellerId === "string"
           ? property.sellerId
           : property.sellerId?._id ?? "";
+      const legal = normalizeLegalDocuments(property.legalDocuments);
 
       setSellerId(ownerId);
-      setForm({
-        title: property.title ?? "",
-        description: property.description ?? "",
-        images: (property.images ?? []).join(", "),
-        address: property.address ?? "",
-        city: property.city ?? "",
-        state: property.state ?? "",
-        pincode: property.pincode ?? "",
-        category: property.category ?? "",
-        buildingType: property.buildingType ?? "",
-        area: property.area ?? "",
-        pricePerSqft: property.pricePerSqft ?? "",
-        status: property.status ?? "",
-      });
+      setExistingImages(property.images ?? []);
+      setExistingLegalDocuments(legal);
+      setApprovalsInPlace(legal.approvalsInPlace);
+      setImageFiles([]);
+      setLegalDocumentFiles(emptyLegalDocumentFiles());
+      setForm(mapPropertyToForm(property));
+      setStep(1);
+      setMaxStep(TOTAL_STEPS);
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
@@ -105,52 +127,198 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
     fetchProperty();
   }, [fetchProperty]);
 
-  function updateField(field: keyof typeof form, value: string) {
+  function updateField(field: keyof PropertyFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function updateParkingTypes(types: string[]) {
+    setForm((prev) => ({ ...prev, parkingTypes: types }));
+  }
+
+  function applySavedProperty(data: PropertyResponse["data"]) {
+    if (!data) return;
+    const legal = normalizeLegalDocuments(data.legalDocuments);
+    setExistingImages(data.images ?? []);
+    setExistingLegalDocuments(legal);
+    setApprovalsInPlace(legal.approvalsInPlace);
+    setImageFiles([]);
+    setLegalDocumentFiles(emptyLegalDocumentFiles());
+    setForm(mapPropertyToForm(data));
+  }
+
+  function validateBasicStep() {
+    if (!form.title.trim()) {
+      toast.error("Title is required");
+      return false;
+    }
+    if (!form.category.trim()) {
+      toast.error("Category is required");
+      return false;
+    }
+    return true;
+  }
+
+  async function saveBasicStep(advance: boolean) {
+    if (!validateBasicStep()) return false;
     setPending(true);
-
-    const images = form.images
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    const payload = {
-      title: form.title.trim(),
-      description: form.description.trim(),
-      images,
-      address: form.address.trim(),
-      city: form.city.trim(),
-      state: form.state.trim(),
-      pincode: form.pincode.trim(),
-      category: form.category.trim(),
-      buildingType: form.buildingType.trim(),
-      area: form.area.trim(),
-      pricePerSqft: form.pricePerSqft.trim(),
-      status: form.status.trim(),
-    };
-
     try {
+      const { data } = await api.put<PropertyResponse>(
+        `/api/properties/${propertyId}`,
+        buildBasicStepPayload(form),
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to save basic details");
+        return false;
+      }
+      applySavedProperty(data.data);
+      toast.success("Basic details saved");
+      if (advance) {
+        setStep(2);
+        setMaxStep((prev) => Math.max(prev, 2));
+      }
+      return true;
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+      return false;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function savePlotStep(advance: boolean) {
+    setPending(true);
+    try {
+      const { data } = await api.put<PropertyResponse>(
+        `/api/properties/${propertyId}`,
+        buildPlotStepPayload(form),
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to save plot details");
+        return false;
+      }
+      applySavedProperty(data.data);
+      toast.success("Plot & building details saved");
+      if (advance) {
+        setStep(3);
+        setMaxStep((prev) => Math.max(prev, 3));
+      }
+      return true;
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+      return false;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function saveStatusStep(advance: boolean) {
+    setPending(true);
+    try {
+      const { data } = await api.put<PropertyResponse>(
+        `/api/properties/${propertyId}`,
+        buildStatusStepPayload(form),
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to save property status");
+        return false;
+      }
+      applySavedProperty(data.data);
+      toast.success("Property status saved");
+      if (advance) {
+        setStep(4);
+        setMaxStep((prev) => Math.max(prev, 4));
+      }
+      return true;
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+      return false;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function saveFinancialStep(advance: boolean) {
+    setPending(true);
+    try {
+      const { data } = await api.put<PropertyResponse>(
+        `/api/properties/${propertyId}`,
+        buildFinancialStepPayload(form),
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to save financial details");
+        return false;
+      }
+      applySavedProperty(data.data);
+      toast.success("Financial details saved");
+      if (advance) {
+        setStep(5);
+        setMaxStep((prev) => Math.max(prev, 5));
+      }
+      return true;
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+      return false;
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function saveMediaStep() {
+    if (!form.title.trim()) {
+      toast.error("Save basic details first — title is required for media upload");
+      setStep(1);
+      return false;
+    }
+    setPending(true);
+    try {
+      const payload = buildMediaStepFormData(form.title, approvalsInPlace, {
+        existingImages,
+        existingLegalDocuments,
+        imageFiles,
+        legalDocumentFiles,
+      });
       const { data } = await api.put<PropertyResponse>(
         `/api/properties/${propertyId}`,
         payload,
       );
-
       if (!data.success) {
-        toast.error(data.message || "Failed to update property");
-        setPending(false);
-        return;
+        toast.error(data.message || "Failed to save media");
+        return false;
       }
-
-      toast.success(data.message || "Property updated successfully");
+      applySavedProperty(data.data);
+      toast.success("Media saved successfully");
+      return true;
     } catch (error) {
       toast.error(getApiErrorMessage(error));
+      return false;
     } finally {
       setPending(false);
     }
+  }
+
+  async function handleSaveAndContinue() {
+    if (step === 1) {
+      await saveBasicStep(true);
+      return;
+    }
+    if (step === 2) {
+      await savePlotStep(true);
+      return;
+    }
+    if (step === 3) {
+      await saveStatusStep(true);
+      return;
+    }
+    if (step === 4) {
+      await saveFinancialStep(true);
+      return;
+    }
+    const saved = await saveMediaStep();
+    if (saved) router.push("/dashboard/property");
+  }
+
+  function handleStepClick(targetStep: number) {
+    if (targetStep <= maxStep) setStep(targetStep);
   }
 
   if (!PROPERTY_MANAGER_ROLES.includes(user?.role ?? "")) {
@@ -203,80 +371,100 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
         </Link>
       </div>
 
-      <PageHeader title="Edit Property" description="Update title, location, category, status, and images." />
+      <PageHeader
+        title="Edit Property"
+        description="Complete each step and save before moving to the next."
+      />
 
-      <form onSubmit={handleSubmit} className={cardClass}>
+      <div className={cardClass}>
+        <PropertyFormSteps
+          currentStep={step}
+          maxStep={maxStep}
+          onStepClick={handleStepClick}
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label htmlFor="title" className={labelClass}>Title</label>
-            <input id="title" type="text" required value={form.title} onChange={(e) => updateField("title", e.target.value)} className={inputClass} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="description" className={labelClass}>Description</label>
-            <textarea id="description" rows={3} value={form.description} onChange={(e) => updateField("description", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="category" className={labelClass}>Category</label>
-            <select id="category" required value={form.category} onChange={(e) => updateField("category", e.target.value)} className={inputClass}>
-              <option value="">Select category</option>
-              {categoryOptions(form.category).map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="status" className={labelClass}>Status</label>
-            <select id="status" value={form.status} onChange={(e) => updateField("status", e.target.value)} className={inputClass}>
-              <option value="">Select status</option>
-              {statusOptions(form.status).map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="buildingType" className={labelClass}>Building Type</label>
-            <input id="buildingType" type="text" value={form.buildingType} onChange={(e) => updateField("buildingType", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="area" className={labelClass}>Area</label>
-            <input id="area" type="text" value={form.area} onChange={(e) => updateField("area", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="pricePerSqft" className={labelClass}>Price per Sqft</label>
-            <input id="pricePerSqft" type="text" value={form.pricePerSqft} onChange={(e) => updateField("pricePerSqft", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="city" className={labelClass}>City</label>
-            <input id="city" type="text" value={form.city} onChange={(e) => updateField("city", e.target.value)} className={inputClass} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="address" className={labelClass}>Address</label>
-            <input id="address" type="text" value={form.address} onChange={(e) => updateField("address", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="state" className={labelClass}>State</label>
-            <input id="state" type="text" value={form.state} onChange={(e) => updateField("state", e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="pincode" className={labelClass}>Pincode</label>
-            <input id="pincode" type="text" value={form.pincode} onChange={(e) => updateField("pincode", e.target.value)} className={inputClass} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="images" className={labelClass}>Image URLs</label>
-            <input id="images" type="text" value={form.images} onChange={(e) => updateField("images", e.target.value)} className={inputClass} placeholder="https://example.com/1.jpg, https://example.com/2.jpg" />
-            <p className="mt-1 text-xs text-zinc-500">Comma-separated image URLs</p>
-          </div>
+          {step === 1 && (
+            <PropertyBasicFields
+              form={form}
+              onFieldChange={updateField}
+              categoryOptions={categoryOptions(form.category)}
+              statusOptions={statusOptions(form.status)}
+            />
+          )}
+
+          {step === 2 && (
+            <PropertyPlotFields
+              form={form}
+              onFieldChange={updateField}
+              onParkingTypesChange={updateParkingTypes}
+            />
+          )}
+
+          {step === 3 && (
+            <PropertyStatusFields form={form} onFieldChange={updateField} />
+          )}
+
+          {step === 4 && (
+            <PropertyFinancialStepFields
+              form={form}
+              onFieldChange={updateField}
+            />
+          )}
+
+          {step === TOTAL_STEPS && (
+            <>
+              <div className="sm:col-span-2">
+                <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
+                  Media &amp; Documents
+                </h3>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Upload images, floor plans, and legal documents.
+                </p>
+              </div>
+              <PropertyUploadSections
+                title={form.title}
+                existingImages={existingImages}
+                existingLegalDocuments={existingLegalDocuments}
+                imageFiles={imageFiles}
+                legalDocumentFiles={legalDocumentFiles}
+                approvalsInPlace={approvalsInPlace}
+                onExistingImagesChange={setExistingImages}
+                onExistingLegalDocumentsChange={setExistingLegalDocuments}
+                onImageFilesChange={setImageFiles}
+                onLegalDocumentFilesChange={setLegalDocumentFiles}
+                onApprovalsChange={setApprovalsInPlace}
+              />
+            </>
+          )}
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button type="submit" disabled={pending} className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-zinc-900">
-            {pending ? "Saving..." : "Save Changes"}
+        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+          {step > 1 && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setStep((prev) => prev - 1)}
+              className="rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            >
+              Previous
+            </button>
+          )}
+
+          <button
+            type="button"
+            disabled={pending}
+            onClick={handleSaveAndContinue}
+            className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-zinc-900"
+          >
+            {pending ? "Saving..." : step === TOTAL_STEPS ? "Save & Finish" : "Save & Continue"}
           </button>
-          <Link href="/dashboard/property" className="rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
+
+          <Link href="/dashboard/property" className="ml-auto rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
             Cancel
           </Link>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

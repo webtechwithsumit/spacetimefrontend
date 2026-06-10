@@ -133,6 +133,24 @@ export function UsersIcon({ className = "size-4" }: NavIconProps) {
   );
 }
 
+export function CheckIcon({ className = "size-3" }: NavIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        d="M16.704 5.705a.75.75 0 0 1-1.06 0L8.5 12.89l-2.47-2.47a.75.75 0 0 1 1.06-1.06l3 3a.75.75 0 0 1 0 1.06l5.614-5.615a.75.75 0 0 1 1.06 0Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 export function ChevronIcon({ className = "size-4", open = false }: NavIconProps & { open?: boolean }) {
   return (
     <svg
