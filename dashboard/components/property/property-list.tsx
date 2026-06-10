@@ -1,0 +1,293 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useToast } from "@/components/toast-provider";
+import { DataTable, type DataTableColumn } from "@/dashboard/components/data-table";
+import { PageHeader } from "@/dashboard/components/page-header";
+import { Pagination } from "@/dashboard/components/pagination";
+import {
+  canEditProperty,
+  getSellerName,
+  PropertiesResponse,
+  statusClass,
+  type DashboardProperty,
+} from "@/dashboard/components/property/types";
+import { PROPERTY_MANAGER_ROLES } from "@/dashboard/constants/property";
+import { api, getApiErrorMessage } from "@/lib/api";
+
+type PropertyColumn = DataTableColumn<DashboardProperty>;
+
+const ITEMS_PER_PAGE = 200;
+
+const INITIAL_COLUMNS: PropertyColumn[] = [
+  { id: "title", label: "Title", visible: true },
+  { id: "city", label: "City", visible: true },
+  { id: "category", label: "Category", visible: true },
+  { id: "area", label: "Area", visible: true },
+  { id: "pricePerSqft", label: "Price/sqft", visible: true },
+  { id: "status", label: "Status", visible: true },
+  { id: "sellerId", label: "Seller", visible: true },
+];
+
+/** Substring match, else characters of query in order inside title (typo-tolerant). */
+function fuzzyTitleMatch(title: string, queryRaw: string): boolean {
+  const q = queryRaw.trim().toLowerCase();
+  if (!q) return true;
+  const n = String(title).toLowerCase();
+  if (n.includes(q)) return true;
+  let qi = 0;
+  for (let i = 0; i < n.length && qi < q.length; i++) {
+    if (n[i] === q[qi]) qi++;
+  }
+  return qi === q.length;
+}
+
+export function PropertyList() {
+  const { user, isAuthenticated } = useAuth();
+  const toast = useToast();
+  const canManage = PROPERTY_MANAGER_ROLES.includes(user?.role ?? "");
+
+  const [allProperties, setAllProperties] = useState<DashboardProperty[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [columns, setColumns] = useState<PropertyColumn[]>(INITIAL_COLUMNS);
+  const [searchTitle, setSearchTitle] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [removing, setRemoving] = useState(false);
+
+  const fetchProperties = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const { data } = await api.get<PropertiesResponse>("/api/properties");
+      if (!data.success) {
+        setError(data.message || "Failed to load properties");
+        setAllProperties([]);
+        return;
+      }
+      setAllProperties(data.data ?? []);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+      setAllProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTitle]);
+
+  const filteredProperties = useMemo(() => {
+    return allProperties.filter((property) =>
+      fuzzyTitleMatch(property.title ?? "", searchTitle),
+    );
+  }, [allProperties, searchTitle]);
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredProperties.length / ITEMS_PER_PAGE)),
+    [filteredProperties.length],
+  );
+
+  const paginatedProperties = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProperties.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProperties, currentPage]);
+
+  function handleClear() {
+    setSearchTitle("");
+    setCurrentPage(1);
+  }
+
+  async function confirmRemove() {
+    if (!removeTarget) return;
+    setRemoving(true);
+
+    try {
+      const { data } = await api.delete<{ success: boolean; message?: string }>(
+        `/api/properties/${removeTarget.id}`,
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to remove property");
+        return;
+      }
+      toast.success(data.message || "Property removed successfully");
+      setRemoveTarget(null);
+      await fetchProperties();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  function renderTableCell(item: DashboardProperty, col: PropertyColumn) {
+    if (col.id === "title") {
+      return (
+        <span className="font-medium text-zinc-900 dark:text-white">
+          {item.title || "—"}
+        </span>
+      );
+    }
+    if (col.id === "status") {
+      return (
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(item.status)}`}
+        >
+          {item.status || "—"}
+        </span>
+      );
+    }
+    if (col.id === "sellerId") return getSellerName(item.sellerId);
+    const value = item[col.id as keyof DashboardProperty];
+    if (value === undefined || value === null || value === "") return "—";
+    return String(value);
+  }
+
+  function renderActions(item: DashboardProperty) {
+    if (!canEditProperty(user?.role, user?._id, item.sellerId)) return null;
+
+    return (
+      <div className="flex items-center gap-3">
+        <Link
+          href={`/dashboard/property/${item._id}/edit`}
+          className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4">
+            <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          Edit
+        </Link>
+        <button
+          type="button"
+          onClick={() => setRemoveTarget({ id: item._id, title: item.title })}
+          className="text-sm font-medium text-red-600 transition-colors hover:text-red-700 dark:text-red-400"
+        >
+          Remove
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader
+          title="Properties"
+          description="View all property listings for auctions."
+        />
+        {canManage && (
+          <Link
+            href="/dashboard/property/create"
+            className="shrink-0 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-900"
+          >
+            Create Property
+          </Link>
+        )}
+      </div>
+
+      {!canManage && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+          Only Seller or Admin can create properties. You can view all listings below.
+        </div>
+      )}
+
+      <div className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div>
+            <label
+              htmlFor="searchTitle"
+              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Property Title
+            </label>
+            <input
+              id="searchTitle"
+              type="search"
+              value={searchTitle}
+              onChange={(e) => setSearchTitle(e.target.value)}
+              placeholder="Search by Title"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-2.5 text-sm text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:border-indigo-400 dark:focus:bg-zinc-900"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="rounded-full border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
+      {loading ? (
+        <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-950">
+          <p className="text-zinc-500 dark:text-zinc-400">Please Wait!</p>
+        </div>
+      ) : filteredProperties.length === 0 ? (
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-8 text-center dark:border-indigo-900/50 dark:bg-indigo-950/30">
+          <h4 className="font-semibold text-indigo-900 dark:text-indigo-200">
+            No Data Found
+          </h4>
+          <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
+            You currently don&apos;t have any Data
+          </p>
+        </div>
+      ) : (
+        <>
+          <DataTable
+            columns={columns}
+            data={paginatedProperties}
+            getRowKey={(item) => item._id}
+            renderTableCell={renderTableCell}
+            currentPage={currentPage}
+            itemsPerPage={ITEMS_PER_PAGE}
+            renderActions={canManage ? renderActions : undefined}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(removeTarget)}
+        title="Remove property?"
+        description={
+          removeTarget
+            ? `Are you sure you want to remove "${removeTarget.title}" from listings?`
+            : ""
+        }
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        pending={removing}
+        onConfirm={confirmRemove}
+        onCancel={() => {
+          if (!removing) setRemoveTarget(null);
+        }}
+      />
+    </div>
+  );
+}

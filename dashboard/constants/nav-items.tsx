@@ -47,7 +47,7 @@ export const dashboardNavItems: DashboardNavItem[] = [
   {
     id: "properties",
     label: "Properties",
-    href: "/dashboard/properties",
+    href: "/dashboard/property",
     icon: <PropertiesIcon />,
   },
   {
