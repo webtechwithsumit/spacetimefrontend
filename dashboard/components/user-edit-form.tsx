@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
@@ -48,6 +49,7 @@ type UserEditFormProps = {
 };
 
 export function UserEditForm({ userId }: UserEditFormProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const toast = useToast();
   const isSuperAdmin = user?.role === "Super-Admin";
@@ -119,7 +121,7 @@ export function UserEditForm({ userId }: UserEditFormProps) {
       }
 
       toast.success(data.message || "User updated successfully");
-      setForm((prev) => ({ ...prev, password: "" }));
+      router.push("/dashboard/system-master/users");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {

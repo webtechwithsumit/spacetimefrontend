@@ -49,7 +49,7 @@ const YEAR_OPTIONS = Array.from(
   (_, i) => YEAR_RANGE_START + i,
 );
 
-const PANEL_WIDTH = 300;
+const PANEL_WIDTH = 320;
 const PANEL_GAP = 8;
 const VIEWPORT_PADDING = 8;
 const ESTIMATED_PANEL_HEIGHT = 380;
@@ -420,7 +420,7 @@ function EditableTimeSpinner({
             commitDraft();
           }
         }}
-        className="w-9 rounded-md border-0 bg-transparent text-center text-lg font-semibold tabular-nums text-zinc-900 outline-none ring-indigo-500 focus:ring-2 dark:text-white"
+        className="w-7 rounded-md border-0 bg-transparent text-center text-base font-semibold tabular-nums text-zinc-900 outline-none ring-indigo-500 focus:ring-2 dark:text-white"
       />
       <button
         type="button"
@@ -448,40 +448,44 @@ function InlineTimePicker({
   onChange,
 }: InlineTimePickerProps) {
   return (
-    <div className="flex items-center justify-center gap-2 border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
-      <EditableTimeSpinner
-        value={hour12}
-        min={1}
-        max={12}
-        ariaLabel="Hour"
-        onChange={(h) => onChange(h, minute, period)}
-      />
-      <span className="text-lg font-semibold text-zinc-400">:</span>
-      <EditableTimeSpinner
-        value={minute}
-        min={0}
-        max={59}
-        ariaLabel="Minute"
-        onChange={(m) => onChange(hour12, m, period)}
-      />
-      <div className="ml-1 flex overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+    <div className="flex w-full items-center justify-between gap-1 border-t border-zinc-100 px-3 py-3 dark:border-zinc-800">
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5">
+        <EditableTimeSpinner
+          value={hour12}
+          min={1}
+          max={12}
+          ariaLabel="Hour"
+          onChange={(h) => onChange(h, minute, period)}
+        />
+        <span className="text-base font-semibold text-zinc-400">:</span>
+        <EditableTimeSpinner
+          value={minute}
+          min={0}
+          max={59}
+          ariaLabel="Minute"
+          onChange={(m) => onChange(hour12, m, period)}
+        />
+      </div>
+      <div className="flex shrink-0 rounded-lg border border-zinc-200 dark:border-zinc-700">
         <button
           type="button"
           onClick={() => onChange(hour12, minute, "am")}
-          className={`px-2.5 py-1 text-xs font-semibold uppercase transition-colors ${period === "am"
-              ? "bg-indigo-700 text-white"
-              : "bg-white text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            }`}
+          className={`px-2 py-1 text-[11px] font-semibold uppercase transition-colors ${
+            period === "am"
+              ? "rounded-l-lg bg-indigo-700 text-white"
+              : "rounded-l-lg bg-white text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          }`}
         >
           am
         </button>
         <button
           type="button"
           onClick={() => onChange(hour12, minute, "pm")}
-          className={`px-2.5 py-1 text-xs font-semibold uppercase transition-colors ${period === "pm"
-              ? "bg-indigo-700 text-white"
-              : "bg-white text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            }`}
+          className={`px-2 py-1 text-[11px] font-semibold uppercase transition-colors ${
+            period === "pm"
+              ? "rounded-r-lg bg-indigo-700 text-white"
+              : "rounded-r-lg bg-white text-zinc-500 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          }`}
         >
           pm
         </button>
@@ -809,57 +813,60 @@ export function DateTimeInput({
             </div>
 
             <div
-              className="overflow-hidden rounded-b-2xl px-3 py-3"
+              className="overflow-hidden rounded-b-2xl"
               onClick={() => setOpenDropdown(null)}
             >
-              <div className="grid grid-cols-7 gap-y-1">
-                {calendarDays.map(({ day, inMonth }, index) => {
-                  const selected = isSelected(day, inMonth);
-                  const todayMatch = isToday(day, inMonth);
-                  return (
-                    <button
-                      key={`${viewYear}-${viewMonth}-${index}`}
-                      type="button"
-                      onClick={() => selectDay(day, inMonth)}
-                      className={`mx-auto flex size-8 items-center justify-center rounded-full text-sm transition-colors ${selected
-                          ? "bg-indigo-700 font-semibold text-white dark:bg-indigo-600"
-                          : todayMatch
-                            ? "font-medium text-indigo-700 ring-2 ring-zinc-300 dark:text-indigo-400 dark:ring-zinc-600"
-                            : inMonth
-                              ? "text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                              : "text-zinc-300 dark:text-zinc-600"
+              <div className="px-3 py-3">
+                <div className="grid grid-cols-7 gap-y-1">
+                  {calendarDays.map(({ day, inMonth }, index) => {
+                    const selected = isSelected(day, inMonth);
+                    const todayMatch = isToday(day, inMonth);
+                    return (
+                      <button
+                        key={`${viewYear}-${viewMonth}-${index}`}
+                        type="button"
+                        onClick={() => selectDay(day, inMonth)}
+                        className={`mx-auto flex size-8 items-center justify-center rounded-full text-sm transition-colors ${
+                          selected
+                            ? "bg-indigo-700 font-semibold text-white dark:bg-indigo-600"
+                            : todayMatch
+                              ? "font-medium text-indigo-700 ring-2 ring-zinc-300 dark:text-indigo-400 dark:ring-zinc-600"
+                              : inMonth
+                                ? "text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                                : "text-zinc-300 dark:text-zinc-600"
                         }`}
-                    >
-                      {day}
-                    </button>
-                  );
-                })}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToday}
+                    className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
+                  >
+                    Today
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  onClick={handleToday}
-                  className="text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
-                >
-                  Today
-                </button>
-              </div>
+              <InlineTimePicker
+                hour12={hour12}
+                minute={minute}
+                period={period}
+                onChange={updateTime}
+              />
             </div>
-
-            <InlineTimePicker
-              hour12={hour12}
-              minute={minute}
-              period={period}
-              onChange={updateTime}
-            />
           </div>,
           document.body,
         )}

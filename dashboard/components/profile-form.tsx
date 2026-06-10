@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { MediaFilePicker } from "@/components/media-file-picker";
@@ -119,6 +120,7 @@ const fieldIcons = {
 };
 
 export function ProfileForm() {
+  const router = useRouter();
   const { isAuthenticated, updateUser } = useAuth();
   const toast = useToast();
   const [form, setForm] = useState(emptyForm);
@@ -220,7 +222,7 @@ export function ProfileForm() {
       setImageFile(null);
       setKycFiles([]);
       toast.success(data.message || "Profile updated successfully");
-      setEditing(false);
+      router.push("/dashboard/profile");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {

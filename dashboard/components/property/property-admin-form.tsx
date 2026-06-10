@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
@@ -37,6 +38,7 @@ type PropertyAdminFormProps = {
 };
 
 export function PropertyAdminForm({ propertyId }: PropertyAdminFormProps) {
+  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
 
@@ -99,8 +101,8 @@ export function PropertyAdminForm({ propertyId }: PropertyAdminFormProps) {
         toast.error(data.message || "Failed to save admin details");
         return;
       }
-      setForm(mapPropertyToAdminForm(data.data!));
       toast.success("Auction & listing details saved");
+      router.push("/dashboard/property");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
