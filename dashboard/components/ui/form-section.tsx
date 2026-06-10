@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 
-type PropertySectionProps = {
+type FormSectionProps = {
   title: string;
   children: ReactNode;
   className?: string;
 };
 
-export function PropertySection({
+export function FormSection({
   title,
   children,
   className = "",
-}: PropertySectionProps) {
+}: FormSectionProps) {
   return (
     <div
       className={`rounded-xl border border-zinc-200 dark:border-zinc-800 ${className}`}

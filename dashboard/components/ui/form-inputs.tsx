@@ -1,12 +1,84 @@
 "use client";
 
-import { inputClass, labelClass } from "@/dashboard/components/property/types";
+import { inputClass, labelClass } from "@/dashboard/components/ui/form-styles";
 import { formatNumericInput } from "@/lib/property-form-utils";
 
-export { MultiSelectField } from "@/dashboard/components/property/property-select";
+type TextInputProps = {
+  id: string;
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  className?: string;
+};
 
-const numberInputClass =
-  "w-full border-0 bg-transparent px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500";
+export function TextInput({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  className,
+}: TextInputProps) {
+  return (
+    <div>
+      {label && (
+        <label htmlFor={id} className={labelClass}>
+          {label}
+        </label>
+      )}
+      <input
+        id={id}
+        type="text"
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={className ?? inputClass}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+type TextareaInputProps = {
+  id: string;
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+  className?: string;
+};
+
+export function TextareaInput({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+  className,
+}: TextareaInputProps) {
+  return (
+    <div>
+      {label && (
+        <label htmlFor={id} className={labelClass}>
+          {label}
+        </label>
+      )}
+      <textarea
+        id={id}
+        rows={rows}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={className ?? inputClass}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
 
 type NumberInputProps = {
   id: string;
@@ -87,7 +159,7 @@ export function CurrencyInput({
               ? (e) => onChange(formatNumericInput(e.target.value))
               : undefined
           }
-          className={`${numberInputClass} read-only:text-zinc-500`}
+          className="w-full border-0 bg-transparent px-3 py-2.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 read-only:text-zinc-500 dark:text-white dark:placeholder:text-zinc-500"
           placeholder={placeholder}
         />
       </div>

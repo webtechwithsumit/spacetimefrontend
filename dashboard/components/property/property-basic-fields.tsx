@@ -1,10 +1,15 @@
 "use client";
 
 import { useToast } from "@/components/toast-provider";
-import { PropertySection } from "@/dashboard/components/property/property-section";
 import type { PropertyFormState } from "@/dashboard/components/property/property-form";
-import { SelectField } from "@/dashboard/components/property/property-select";
-import { inputClass, labelClass } from "@/dashboard/components/property/types";
+import {
+  FormSection,
+  SelectField,
+  TextareaInput,
+  TextInput,
+  withCurrentOption,
+} from "@/dashboard/components/ui";
+import { inputClass } from "@/dashboard/components/ui/form-styles";
 import {
   INDIAN_STATES,
   PROPERTY_CATEGORIES,
@@ -19,17 +24,6 @@ type PropertyBasicFieldsProps = {
   stateOptions?: string[];
 };
 
-function optionList(
-  current: string,
-  defaults: readonly string[],
-): string[] {
-  const list =
-    current && !defaults.includes(current as (typeof defaults)[number])
-      ? [current, ...defaults]
-      : [...defaults];
-  return [...new Set(list)];
-}
-
 export function PropertyBasicFields({
   form,
   onFieldChange,
@@ -38,28 +32,24 @@ export function PropertyBasicFields({
   stateOptions,
 }: PropertyBasicFieldsProps) {
   const toast = useToast();
-  const categories = categoryOptions ?? optionList(form.category, PROPERTY_CATEGORIES);
-  const statuses = statusOptions ?? optionList(form.status, PROPERTY_STATUSES);
-  const states = stateOptions ?? optionList(form.state, INDIAN_STATES);
+  const categories =
+    categoryOptions ?? withCurrentOption(form.category, PROPERTY_CATEGORIES);
+  const statuses =
+    statusOptions ?? withCurrentOption(form.status, PROPERTY_STATUSES);
+  const states = stateOptions ?? withCurrentOption(form.state, INDIAN_STATES);
 
   return (
     <div className="space-y-4 sm:col-span-2">
-      <PropertySection title="1. Basic & Location Details">
+      <FormSection title="1. Basic & Location Details">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label htmlFor="title" className={labelClass}>
-              Property Title
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              value={form.title}
-              onChange={(e) => onFieldChange("title", e.target.value)}
-              className={inputClass}
-              placeholder="Property title"
-            />
-          </div>
+          <TextInput
+            id="title"
+            label="Property Title"
+            required
+            value={form.title}
+            onChange={(value) => onFieldChange("title", value)}
+            placeholder="Property title"
+          />
 
           <SelectField
             id="category"
@@ -71,7 +61,7 @@ export function PropertyBasicFields({
           />
 
           <div className="sm:col-span-2 lg:col-span-3">
-            <label htmlFor="address" className={labelClass}>
+            <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Address &amp; Location
             </label>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -86,7 +76,9 @@ export function PropertyBasicFields({
               <button
                 type="button"
                 onClick={() =>
-                  toast.success("Location picker will be available in a future update.")
+                  toast.success(
+                    "Location picker will be available in a future update.",
+                  )
                 }
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
               >
@@ -106,33 +98,21 @@ export function PropertyBasicFields({
             </div>
           </div>
 
-          <div>
-            <label htmlFor="plotNumber" className={labelClass}>
-              Plot Number
-            </label>
-            <input
-              id="plotNumber"
-              type="text"
-              value={form.plotNumber}
-              onChange={(e) => onFieldChange("plotNumber", e.target.value)}
-              className={inputClass}
-              placeholder="Plot / survey number"
-            />
-          </div>
+          <TextInput
+            id="plotNumber"
+            label="Plot Number"
+            value={form.plotNumber}
+            onChange={(value) => onFieldChange("plotNumber", value)}
+            placeholder="Plot / survey number"
+          />
 
-          <div>
-            <label htmlFor="city" className={labelClass}>
-              City
-            </label>
-            <input
-              id="city"
-              type="text"
-              value={form.city}
-              onChange={(e) => onFieldChange("city", e.target.value)}
-              className={inputClass}
-              placeholder="City"
-            />
-          </div>
+          <TextInput
+            id="city"
+            label="City"
+            value={form.city}
+            onChange={(value) => onFieldChange("city", value)}
+            placeholder="City"
+          />
 
           <SelectField
             id="state"
@@ -143,74 +123,44 @@ export function PropertyBasicFields({
             placeholder="Select state"
           />
 
-          <div>
-            <label htmlFor="pincode" className={labelClass}>
-              Pin Code
-            </label>
-            <input
-              id="pincode"
-              type="text"
-              value={form.pincode}
-              onChange={(e) => onFieldChange("pincode", e.target.value)}
-              className={inputClass}
-              placeholder="122002"
-            />
-          </div>
+          <TextInput
+            id="pincode"
+            label="Pin Code"
+            value={form.pincode}
+            onChange={(value) => onFieldChange("pincode", value)}
+            placeholder="122002"
+          />
 
-          <div>
-            <label htmlFor="microMarketLocality" className={labelClass}>
-              Micro-Market / Locality
-            </label>
-            <input
-              id="microMarketLocality"
-              type="text"
-              value={form.microMarketLocality}
-              onChange={(e) =>
-                onFieldChange("microMarketLocality", e.target.value)
-              }
-              className={inputClass}
-              placeholder="Sector 43"
-            />
-          </div>
+          <TextInput
+            id="microMarketLocality"
+            label="Micro-Market / Locality"
+            value={form.microMarketLocality}
+            onChange={(value) => onFieldChange("microMarketLocality", value)}
+            placeholder="Sector 43"
+          />
 
-          <div>
-            <label htmlFor="buildingName" className={labelClass}>
-              Building Name
-            </label>
-            <input
-              id="buildingName"
-              type="text"
-              value={form.buildingName}
-              onChange={(e) => onFieldChange("buildingName", e.target.value)}
-              className={inputClass}
-              placeholder="Building name"
-            />
-          </div>
+          <TextInput
+            id="buildingName"
+            label="Building Name"
+            value={form.buildingName}
+            onChange={(value) => onFieldChange("buildingName", value)}
+            placeholder="Building name"
+          />
 
-          <div className="lg:col-span-1">
-            <label htmlFor="roadName" className={labelClass}>
-              Road Name
-            </label>
-            <input
-              id="roadName"
-              type="text"
-              value={form.roadName}
-              onChange={(e) => onFieldChange("roadName", e.target.value)}
-              className={inputClass}
-              placeholder="Golf Course Road"
-            />
-          </div>
+          <TextInput
+            id="roadName"
+            label="Road Name"
+            value={form.roadName}
+            onChange={(value) => onFieldChange("roadName", value)}
+            placeholder="Golf Course Road"
+          />
 
           <div className="sm:col-span-2">
-            <label htmlFor="description" className={labelClass}>
-              Description
-            </label>
-            <textarea
+            <TextareaInput
               id="description"
-              rows={3}
+              label="Description"
               value={form.description}
-              onChange={(e) => onFieldChange("description", e.target.value)}
-              className={inputClass}
+              onChange={(value) => onFieldChange("description", value)}
               placeholder="Property details..."
             />
           </div>
@@ -225,7 +175,7 @@ export function PropertyBasicFields({
             clearable={false}
           />
         </div>
-      </PropertySection>
+      </FormSection>
     </div>
   );
 }

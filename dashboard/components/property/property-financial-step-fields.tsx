@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { PropertySection } from "@/dashboard/components/property/property-section";
-import { CurrencyInput } from "@/dashboard/components/property/property-form-fields";
 import type { PropertyFormState } from "@/dashboard/components/property/property-form";
+import { CurrencyInput, FormSection } from "@/dashboard/components/ui";
 import { calcPricePerSqft } from "@/lib/property-form-utils";
 
 type PropertyFinancialStepFieldsProps = {
@@ -37,7 +36,7 @@ export function PropertyFinancialStepFields({
 
   return (
     <div className="sm:col-span-2">
-      <PropertySection title="Financial Details">
+      <FormSection title="Financial Details">
         <div className="grid gap-4 sm:grid-cols-2">
           <CurrencyInput
             id="totalPrice"
@@ -72,7 +71,7 @@ export function PropertyFinancialStepFields({
             placeholder="e.g. 15,000"
           />
         </div>
-      </PropertySection>
+      </FormSection>
     </div>
   );
 }

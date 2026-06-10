@@ -1,7 +1,7 @@
 "use client";
 
 import { MediaFilePicker } from "@/components/media-file-picker";
-import { labelClass } from "@/dashboard/components/property/types";
+import { labelClass } from "@/dashboard/components/ui/form-styles";
 import {
   emptyLegalDocumentFiles,
   emptyLegalDocuments,

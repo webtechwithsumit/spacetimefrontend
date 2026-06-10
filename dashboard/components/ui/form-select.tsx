@@ -11,7 +11,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { labelClass } from "@/dashboard/components/property/types";
+import { labelClass } from "@/dashboard/components/ui/form-styles";
 import { CheckIcon, ChevronIcon } from "@/dashboard/icons/nav-icons";
 
 const triggerClass =

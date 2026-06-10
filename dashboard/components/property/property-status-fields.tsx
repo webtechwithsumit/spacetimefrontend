@@ -1,10 +1,12 @@
 "use client";
 
-import { NumberInput } from "@/dashboard/components/property/property-form-fields";
-import { PropertySection } from "@/dashboard/components/property/property-section";
 import type { PropertyFormState } from "@/dashboard/components/property/property-form";
-import { SelectField } from "@/dashboard/components/property/property-select";
-import { inputClass, labelClass } from "@/dashboard/components/property/types";
+import {
+  FormSection,
+  NumberInput,
+  SelectField,
+  TextInput,
+} from "@/dashboard/components/ui";
 import {
   CONSTRUCTION_STATUSES,
   FURNISHING_STATUSES,
@@ -21,7 +23,7 @@ export function PropertyStatusFields({
 }: PropertyStatusFieldsProps) {
   return (
     <div className="sm:col-span-2">
-      <PropertySection title="Property Status">
+      <FormSection title="Property Status">
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
             id="constructionStatus"
@@ -50,24 +52,16 @@ export function PropertyStatusFields({
           />
 
           {form.furnishingStatus === "Others" && (
-            <div>
-              <label htmlFor="furnishingOther" className={labelClass}>
-                Furnishing details
-              </label>
-              <input
-                id="furnishingOther"
-                type="text"
-                value={form.furnishingOther}
-                onChange={(e) =>
-                  onFieldChange("furnishingOther", e.target.value)
-                }
-                className={inputClass}
-                placeholder="e.g. bare shell"
-              />
-            </div>
+            <TextInput
+              id="furnishingOther"
+              label="Furnishing details"
+              value={form.furnishingOther}
+              onChange={(value) => onFieldChange("furnishingOther", value)}
+              placeholder="e.g. bare shell"
+            />
           )}
         </div>
-      </PropertySection>
+      </FormSection>
     </div>
   );
 }

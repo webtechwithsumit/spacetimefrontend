@@ -1,17 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  MultiSelectField,
-  NumberInput,
-} from "@/dashboard/components/property/property-form-fields";
-import { PropertySection } from "@/dashboard/components/property/property-section";
+import type { PropertyFormState } from "@/dashboard/components/property/property-form";
 import {
   CompactSelectField,
+  FormSection,
+  labelClass,
+  MultiSelectField,
+  NumberInput,
   SelectField,
-} from "@/dashboard/components/property/property-select";
-import type { PropertyFormState } from "@/dashboard/components/property/property-form";
-import { inputClass, labelClass } from "@/dashboard/components/property/types";
+  TextInput,
+} from "@/dashboard/components/ui";
 import {
   CAR_PARKING_INCLUDED,
   PARKING_TYPES,
@@ -41,7 +40,7 @@ export function PropertyPlotFields({
 
   return (
     <div className="sm:col-span-2">
-      <PropertySection title="Plot & Building Specifications">
+      <FormSection title="Plot & Building Specifications">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="plotArea" className={labelClass}>
@@ -88,19 +87,13 @@ export function PropertyPlotFields({
             onChange={(value) => onFieldChange("totalCarpetArea", value)}
           />
 
-          <div>
-            <label htmlFor="floorsOffered" className={labelClass}>
-              Floors Offered
-            </label>
-            <input
-              id="floorsOffered"
-              type="text"
-              value={form.floorsOffered}
-              onChange={(e) => onFieldChange("floorsOffered", e.target.value)}
-              className={inputClass}
-              placeholder="B + G + 4"
-            />
-          </div>
+          <TextInput
+            id="floorsOffered"
+            label="Floors Offered"
+            value={form.floorsOffered}
+            onChange={(value) => onFieldChange("floorsOffered", value)}
+            placeholder="B + G + 4"
+          />
 
           <NumberInput
             id="totalFloorsInBuilding"
@@ -136,7 +129,7 @@ export function PropertyPlotFields({
             placeholder="Select parking type"
           />
         </div>
-      </PropertySection>
+      </FormSection>
     </div>
   );
 }
