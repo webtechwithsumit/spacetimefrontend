@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { siteNavItems } from "@/constants/site-nav";
+import { getUserInitials } from "@/lib/auth";
 
 function isActiveLink(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -12,6 +14,7 @@ function isActiveLink(pathname: string, href: string) {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { user, isAuthenticated, isReady, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -71,6 +74,51 @@ export function MobileNav() {
               );
             })}
           </ul>
+
+          <div className="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            {isReady && isAuthenticated && user ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white dark:bg-white dark:text-zinc-900">
+                    {getUserInitials(user.name)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
+                      {user.name}
+                    </p>
+                    <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-full bg-zinc-100 px-4 py-2 text-center text-sm font-medium text-zinc-900 dark:bg-zinc-900 dark:text-white"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    logout();
+                  }}
+                  className="w-full rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 dark:border-red-900/50 dark:text-red-400"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : isReady ? (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="block rounded-full bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white dark:bg-white dark:text-zinc-900"
+              >
+                Login / Sign Up
+              </Link>
+            ) : null}
+          </div>
         </nav>
       )}
     </div>

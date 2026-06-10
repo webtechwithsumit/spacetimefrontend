@@ -3,22 +3,25 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 import { API_BASE_URL } from "@/lib/api";
+import type { AuthUser } from "@/lib/auth";
 
 type LoginResponse = {
   success: boolean;
   message: string;
   data?: {
-    user: Record<string, unknown>;
+    user: AuthUser;
     token: string;
   };
 };
 
 export function LoginForm() {
   const router = useRouter();
+  const { login } = useAuth();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -52,13 +55,13 @@ export function LoginForm() {
         return;
       }
 
-      if (data.data?.token) {
-        localStorage.setItem("spacetime_token", data.data.token);
-      }
-      if (data.data?.user) {
-        localStorage.setItem("spacetime_user", JSON.stringify(data.data.user));
+      if (!data.data?.user || !data.data?.token) {
+        setError("Login failed");
+        setPending(false);
+        return;
       }
 
+      login(data.data.user, data.data.token);
       router.push("/dashboard");
     } catch {
       setError("Unable to connect to server. Please try again.");

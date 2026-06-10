@@ -1,12 +1,5 @@
-import { PageHeader } from "@/dashboard/components/page-header";
+import { ProfileForm } from "@/dashboard/components/profile-form";
 
 export default function ProfilePage() {
-  return (
-    <div>
-      <PageHeader
-        title="Profile"
-        description="Manage your personal information and account details."
-      />
-    </div>
-  );
+  return <ProfileForm />;
 }

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/auth-provider";
+import { AuthUserMenu } from "@/components/auth-user-menu";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { siteNavItems } from "@/constants/site-nav";
@@ -13,6 +15,7 @@ function isActiveLink(pathname: string, href: string) {
 
 export function Header() {
   const pathname = usePathname();
+  const { isAuthenticated, isReady } = useAuth();
 
   return (
     <header className="relative border-b border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-black">
@@ -52,12 +55,16 @@ export function Header() {
 
         <div className="flex items-center justify-end gap-3">
           <ThemeToggle />
-          <Link
-            href="/login"
-            className="hidden rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:inline-block dark:bg-white dark:text-zinc-900"
-          >
-            Login / Sign Up
-          </Link>
+          {isReady && isAuthenticated ? (
+            <AuthUserMenu />
+          ) : isReady ? (
+            <Link
+              href="/login"
+              className="hidden rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:inline-block dark:bg-white dark:text-zinc-900"
+            >
+              Login / Sign Up
+            </Link>
+          ) : null}
           <MobileNav />
         </div>
       </div>
