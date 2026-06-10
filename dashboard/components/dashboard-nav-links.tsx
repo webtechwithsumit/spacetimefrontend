@@ -91,15 +91,7 @@ export function DashboardNavLinks({ onNavigate }: DashboardNavLinksProps) {
     [user?.role],
   );
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
-    () => {
-      const initial: Record<string, boolean> = {};
-      dashboardNavItems.forEach((item) => {
-        if (item.defaultOpen) initial[item.id] = true;
-      });
-      return initial;
-    },
-  );
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setOpenSections((prev) => {
@@ -121,7 +113,7 @@ export function DashboardNavLinks({ onNavigate }: DashboardNavLinksProps) {
     <div className="space-y-1">
       {visibleItems.map((item) => {
         if (item.children?.length) {
-          const isOpen = openSections[item.id] ?? item.defaultOpen ?? false;
+          const isOpen = openSections[item.id] ?? false;
           const groupActive = isGroupActive(pathname, item);
 
           return (

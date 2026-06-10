@@ -2,7 +2,8 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { API_BASE_URL } from "@/lib/api";
+import { useToast } from "@/components/toast-provider";
+import { api, getApiErrorMessage } from "@/lib/api";
 import type { AuthUser } from "@/lib/auth";
 import { getUserInitials } from "@/lib/auth";
 
@@ -114,27 +115,22 @@ const fieldIcons = {
 };
 
 export function ProfileForm() {
-  const { token, updateUser } = useAuth();
+  const { isAuthenticated, updateUser } = useAuth();
+  const toast = useToast();
   const [form, setForm] = useState(emptyForm);
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [showAadhar, setShowAadhar] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const fetchProfile = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
-    setError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data: ProfileResponse = await res.json();
-      if (!res.ok || !data.success || !data.data) {
-        setError(data.message || "Failed to load profile");
+      const { data } = await api.get<ProfileResponse>("/api/profile");
+      if (!data.success || !data.data) {
+        toast.error(data.message || "Failed to load profile");
         return;
       }
       setForm({
@@ -147,12 +143,12 @@ export function ProfileForm() {
         currentPassword: "",
       });
       setRole(data.data.role ?? "");
-    } catch {
-      setError("Unable to connect to server.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [isAuthenticated, toast]);
 
   useEffect(() => {
     fetchProfile();
@@ -164,8 +160,6 @@ export function ProfileForm() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
-    setSuccess("");
     setPending(true);
     const payload: Record<string, string> = {
       name: form.name.trim(),
@@ -179,17 +173,9 @@ export function ProfileForm() {
       payload.currentPassword = form.currentPassword;
     }
     try {
-      const res = await fetch(`${API_BASE_URL}/api/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data: ProfileResponse = await res.json();
-      if (!res.ok || !data.success || !data.data) {
-        setError(data.message || "Failed to update profile");
+      const { data } = await api.put<ProfileResponse>("/api/profile", payload);
+      if (!data.success || !data.data) {
+        toast.error(data.message || "Failed to update profile");
         setPending(false);
         return;
       }
@@ -204,10 +190,10 @@ export function ProfileForm() {
         password: "",
         currentPassword: "",
       }));
-      setSuccess(data.message || "Profile updated successfully");
+      toast.success(data.message || "Profile updated successfully");
       setEditing(false);
-    } catch {
-      setError("Unable to connect to server.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     } finally {
       setPending(false);
     }
@@ -281,11 +267,7 @@ export function ProfileForm() {
             {!editing && (
               <button
                 type="button"
-                onClick={() => {
-                  setEditing(true);
-                  setError("");
-                  setSuccess("");
-                }}
+                onClick={() => setEditing(true)}
                 className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-zinc-900/15 transition-all hover:-translate-y-0.5 hover:shadow-xl dark:bg-white dark:text-zinc-900 dark:shadow-none"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4">
@@ -297,17 +279,6 @@ export function ProfileForm() {
           </div>
         </div>
       </section>
-
-      {success && (
-        <p className="rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
-          {success}
-        </p>
-      )}
-      {error && !editing && (
-        <p className="rounded-2xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-sm dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-          {error}
-        </p>
-      )}
 
       <div className="grid gap-6 xl:grid-cols-3">
         {/* Main card */}
@@ -424,17 +395,11 @@ export function ProfileForm() {
                 </div>
               </div>
 
-              {error && (
-                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-                  {error}
-                </p>
-              )}
-
               <div className="flex flex-wrap gap-3">
                 <button type="submit" disabled={pending} className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-zinc-900">
                   {pending ? "Saving..." : "Save Changes"}
                 </button>
-                <button type="button" disabled={pending} onClick={() => { setEditing(false); setError(""); fetchProfile(); }} className="rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
+                <button type="button" disabled={pending} onClick={() => { setEditing(false); fetchProfile(); }} className="rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
                   Cancel
                 </button>
               </div>

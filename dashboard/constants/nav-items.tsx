@@ -74,7 +74,6 @@ export const dashboardNavItems: DashboardNavItem[] = [
     id: "system-master",
     label: "System Master",
     icon: <SystemMasterIcon />,
-    defaultOpen: true,
     roles: ["Super-Admin"],
     children: [
       {

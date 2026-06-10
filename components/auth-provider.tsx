@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { clearApiToken, setApiToken } from "@/lib/api";
 import {
   AuthUser,
   clearStoredSession,
@@ -37,13 +38,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    const storedToken = getStoredToken();
     setUser(getStoredUser());
-    setToken(getStoredToken());
+    setToken(storedToken);
+    if (storedToken) setApiToken(storedToken);
     setIsReady(true);
   }, []);
 
   const login = useCallback((nextUser: AuthUser, nextToken: string) => {
     setStoredSession(nextUser, nextToken);
+    setApiToken(nextToken);
     setUser(nextUser);
     setToken(nextToken);
   }, []);
@@ -55,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearStoredSession();
+    clearApiToken();
     setUser(null);
     setToken(null);
     router.push("/");

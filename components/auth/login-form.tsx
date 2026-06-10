@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
-import { API_BASE_URL } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import type { AuthUser } from "@/lib/auth";
 
 type LoginResponse = {
@@ -41,15 +41,12 @@ export function LoginForm() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const { data } = await api.post<LoginResponse>("/api/auth/login", {
+        email,
+        password,
       });
 
-      const data: LoginResponse = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setError(data.message || "Login failed");
         setPending(false);
         return;
@@ -63,8 +60,8 @@ export function LoginForm() {
 
       login(data.data.user, data.data.token);
       router.push("/dashboard");
-    } catch {
-      setError("Unable to connect to server. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Unable to connect to server. Please try again."));
       setPending(false);
     }
   }

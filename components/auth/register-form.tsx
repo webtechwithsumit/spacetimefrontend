@@ -6,7 +6,7 @@ import { FormEvent, useState } from "react";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
-import { API_BASE_URL } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 
 const REGISTER_ROLES = ["Buyer", "Seller", "Broker"] as const;
 
@@ -72,23 +72,23 @@ export function RegisterForm() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, role, password }),
+      const { data } = await api.post<RegisterResponse>("/api/auth/register", {
+        name,
+        email,
+        phone,
+        role,
+        password,
       });
 
-      const data: RegisterResponse = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setError(data.message || "Registration failed");
         setPending(false);
         return;
       }
 
       router.push("/login");
-    } catch {
-      setError("Unable to connect to server. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Unable to connect to server. Please try again."));
       setPending(false);
     }
   }

@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { PageHeader } from "@/dashboard/components/page-header";
 import { ALL_USER_ROLES } from "@/dashboard/constants/nav-items";
-import { API_BASE_URL } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 
 type DashboardUser = {
   _id: string;
@@ -34,7 +35,7 @@ const labelClass =
   "mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
 export function UsersManagement() {
-  const { user, token } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const isSuperAdmin = user?.role === "Super-Admin";
 
   const [users, setUsers] = useState<DashboardUser[]>([]);
@@ -46,33 +47,28 @@ export function UsersManagement() {
   const [showForm, setShowForm] = useState(false);
 
   const fetchUsers = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data: UsersResponse = await res.json();
+      const { data } = await api.get<UsersResponse>("/api/users");
 
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setError(data.message || "Failed to load users");
         setUsers([]);
         return;
       }
 
       setUsers(data.data ?? []);
-    } catch {
-      setError("Unable to connect to server.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
       setUsers([]);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -98,18 +94,12 @@ export function UsersManagement() {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/users/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const { data } = await api.post<CreateUserResponse>(
+        "/api/users/create",
+        payload,
+      );
 
-      const data: CreateUserResponse = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setFormError(data.message || "Failed to create user");
         setPending(false);
         return;
@@ -119,8 +109,8 @@ export function UsersManagement() {
       e.currentTarget.reset();
       setShowForm(false);
       await fetchUsers();
-    } catch {
-      setFormError("Unable to connect to server.");
+    } catch (error) {
+      setFormError(getApiErrorMessage(error));
     } finally {
       setPending(false);
     }
@@ -282,13 +272,16 @@ export function UsersManagement() {
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300">
                   Role
                 </th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-300">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400"
                   >
                     Loading users...
@@ -297,7 +290,7 @@ export function UsersManagement() {
               ) : users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400"
                   >
                     No users found.
@@ -322,6 +315,24 @@ export function UsersManagement() {
                       <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
                         {item.role}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/system-master/users/${item._id}/edit`}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          className="size-4"
+                        >
+                          <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))
