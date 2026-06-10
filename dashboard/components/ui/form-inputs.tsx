@@ -124,6 +124,8 @@ export function NumberInput({
   );
 }
 
+export { DateTimeInput } from "@/dashboard/components/ui/form-datetime-picker";
+
 export function CurrencyInput({
   id,
   label,

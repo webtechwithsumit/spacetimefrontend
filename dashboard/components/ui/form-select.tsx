@@ -139,13 +139,21 @@ function DropdownPortal({
 
 function ClearButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <span
+      role="button"
+      tabIndex={0}
       onClick={(e) => {
         e.stopPropagation();
         onClick();
       }}
-      className="shrink-0 rounded-md p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick();
+        }
+      }}
+      className="shrink-0 cursor-pointer rounded-md p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
       aria-label="Clear selection"
     >
       <svg
@@ -156,7 +164,7 @@ function ClearButton({ onClick }: { onClick: () => void }) {
       >
         <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
       </svg>
-    </button>
+    </span>
   );
 }
 
@@ -348,17 +356,25 @@ export function MultiSelectField({
                 className="inline-flex max-w-full items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
               >
                 <span className="truncate">{item}</span>
-                <button
-                  type="button"
+                <span
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
                     remove(item);
                   }}
-                  className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      remove(item);
+                    }
+                  }}
+                  className="cursor-pointer text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
                   aria-label={`Remove ${item}`}
                 >
                   ×
-                </button>
+                </span>
               </span>
             ))
           )}

@@ -7,12 +7,15 @@ import { PageHeader } from "@/dashboard/components/page-header";
 import { PropertyFormWizard } from "@/dashboard/components/property/property-form-wizard";
 import {
   canEditProperty,
+  isAdminUser,
   PropertyResponse,
 } from "@/dashboard/components/property/types";
 import { usePropertyFormWizard } from "@/dashboard/components/property/use-property-form-wizard";
+import Link from "next/link";
 import {
   AlertBanner,
   BackLink,
+  btnSecondaryClass,
   cardClass,
   withCurrentOption,
 } from "@/dashboard/components/ui";
@@ -114,6 +117,17 @@ export function PropertyEditForm({ propertyId }: PropertyEditFormProps) {
         title="Edit Property"
         description="Complete each step and save before moving to the next."
       />
+
+      {isAdminUser(user?.role) && (
+        <div className="mb-4">
+          <Link
+            href={`/dashboard/property/${propertyId}/admin`}
+            className={btnSecondaryClass}
+          >
+            Open Auction & Listing Admin Form
+          </Link>
+        </div>
+      )}
 
       <PropertyFormWizard
         step={wizard.step}

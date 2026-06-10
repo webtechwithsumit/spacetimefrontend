@@ -26,6 +26,18 @@ export type PropertyStatus = (typeof PROPERTY_STATUSES)[number];
 
 export const PROPERTY_MANAGER_ROLES = ["Seller", "Admin", "Super-Admin"];
 
+export const ADMIN_ROLES = ["Admin", "Super-Admin"] as const;
+
+export const AUCTION_STATUSES = [
+  "Draft",
+  "Scheduled",
+  "Live",
+  "Ended",
+  "Cancelled",
+] as const;
+
+export const YES_NO_OPTIONS = ["Yes", "No"] as const;
+
 export const PROPERTY_APPROVALS = [
   "Building Plan Sanctioned",
   "Occupancy Certificate",

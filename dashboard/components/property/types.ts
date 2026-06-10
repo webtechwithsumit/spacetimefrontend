@@ -1,4 +1,7 @@
-import { PROPERTY_MANAGER_ROLES } from "@/dashboard/constants/property";
+import {
+  ADMIN_ROLES,
+  PROPERTY_MANAGER_ROLES,
+} from "@/dashboard/constants/property";
 
 export type PropertySeller = {
   _id: string;
@@ -51,8 +54,29 @@ export type DashboardProperty = {
   propertyTax?: string;
   estimatedMonthlyMaintenance?: string;
   status: string;
+  yearBuiltRenovated?: string;
+  tags?: string[];
+  amenities?: string;
+  reservePrice?: string;
+  startingBidAmount?: string;
+  bidIncrement?: string;
+  auctionStartDateTime?: string;
+  auctionEndDateTime?: string;
+  ribbonText?: string;
+  propertyVideoUrl?: string;
+  matterportTourUrl?: string;
+  auctionStatus?: string;
+  exclusiveMandateSoldX?: string;
+  canBrokerBid?: string;
+  assignedAuctionAdvisorId?: string;
   sellerId?: PropertySeller | string;
   createdAt?: string;
+};
+
+export type BrokerOption = {
+  _id: string;
+  name: string;
+  email: string;
 };
 
 export type PropertiesResponse = {
@@ -89,6 +113,10 @@ export function statusClass(status: string) {
 export function getSellerName(sellerId?: PropertySeller | string) {
   if (!sellerId || typeof sellerId === "string") return "—";
   return sellerId.name;
+}
+
+export function isAdminUser(role?: string) {
+  return ADMIN_ROLES.includes(role as (typeof ADMIN_ROLES)[number]);
 }
 
 export function canEditProperty(

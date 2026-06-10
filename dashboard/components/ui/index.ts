@@ -6,6 +6,7 @@ export {
   TextareaInput,
   TextInput,
 } from "@/dashboard/components/ui/form-inputs";
+export { DateTimeInput } from "@/dashboard/components/ui/form-datetime-picker";
 export { FormSection } from "@/dashboard/components/ui/form-section";
 export {
   CompactSelectField,

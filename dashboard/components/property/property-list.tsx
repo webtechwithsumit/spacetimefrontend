@@ -11,6 +11,7 @@ import { Pagination } from "@/dashboard/components/pagination";
 import {
   canEditProperty,
   getSellerName,
+  isAdminUser,
   PropertiesResponse,
   statusClass,
   type DashboardProperty,
@@ -21,6 +22,55 @@ import { api, getApiErrorMessage } from "@/lib/api";
 type PropertyColumn = DataTableColumn<DashboardProperty>;
 
 const ITEMS_PER_PAGE = 200;
+
+const actionLinkClass =
+  "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors";
+
+function EditIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="size-3.5"
+    >
+      <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+function AuctionIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="size-3.5"
+    >
+      <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M4 14h4M12 10h4M20 16h-4" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="size-3.5"
+    >
+      <path d="M3 6h18M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m2 0v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6h10Z" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
 
 const INITIAL_COLUMNS: PropertyColumn[] = [
   { id: "title", label: "Title", visible: true },
@@ -158,26 +208,44 @@ export function PropertyList() {
   }
 
   function renderActions(item: DashboardProperty) {
-    if (!canEditProperty(user?.role, user?._id, item.sellerId)) return null;
+    const canEdit = canEditProperty(user?.role, user?._id, item.sellerId);
+    const showAdmin = isAdminUser(user?.role);
+
+    if (!canEdit && !showAdmin) return null;
 
     return (
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/dashboard/property/${item._id}/edit`}
-          className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-4">
-            <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-          Edit
-        </Link>
-        <button
-          type="button"
-          onClick={() => setRemoveTarget({ id: item._id, title: item.title })}
-          className="text-sm font-medium text-red-600 transition-colors hover:text-red-700 dark:text-red-400"
-        >
-          Remove
-        </button>
+      <div className="flex flex-nowrap items-center gap-1.5">
+        {canEdit && (
+          <Link
+            href={`/dashboard/property/${item._id}/edit`}
+            title="Edit property"
+            className={`${actionLinkClass} text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40`}
+          >
+            <EditIcon />
+            Edit
+          </Link>
+        )}
+        {showAdmin && (
+          <Link
+            href={`/dashboard/property/${item._id}/admin`}
+            title="Auction & listing admin"
+            className={`${actionLinkClass} text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/40`}
+          >
+            <AuctionIcon />
+            Admin
+          </Link>
+        )}
+        {canEdit && (
+          <button
+            type="button"
+            title="Remove property"
+            onClick={() => setRemoveTarget({ id: item._id, title: item.title })}
+            className={`${actionLinkClass} text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40`}
+          >
+            <TrashIcon />
+            Remove
+          </button>
+        )}
       </div>
     );
   }
@@ -262,6 +330,7 @@ export function PropertyList() {
             currentPage={currentPage}
             itemsPerPage={ITEMS_PER_PAGE}
             renderActions={canManage ? renderActions : undefined}
+            actionsLabel="Actions"
           />
           <Pagination
             currentPage={currentPage}
