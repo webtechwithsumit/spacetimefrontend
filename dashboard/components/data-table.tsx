@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { ITEMS_PER_PAGE } from "@/lib/pagination";
 
 export type DataTableColumn<T> = {
   id: string;
@@ -41,7 +42,7 @@ export function DataTable<T>({
   showSerialNo = true,
   serialNoLabel = "Sr. No",
   currentPage = 1,
-  itemsPerPage = 200,
+  itemsPerPage = ITEMS_PER_PAGE,
   renderActions,
   actionsLabel = "Action",
   className = "",

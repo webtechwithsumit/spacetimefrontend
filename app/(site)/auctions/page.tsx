@@ -30,7 +30,7 @@ export default function AuctionsPage() {
           </p>
         </div>
 
-        <LiveAuctionsList gridClassName="sm:grid-cols-2 xl:grid-cols-4" skeletonCount={4} />
+        <LiveAuctionsList gridClassName="sm:grid-cols-2 xl:grid-cols-4" />
       </section>
     </main>
   );

@@ -2,6 +2,7 @@ import {
   ADMIN_ROLES,
   PROPERTY_MANAGER_ROLES,
 } from "@/dashboard/constants/property";
+import type { PaginatedResponse } from "@/lib/pagination";
 
 export type PropertySeller = {
   _id: string;
@@ -80,11 +81,7 @@ export type BrokerOption = {
   email: string;
 };
 
-export type PropertiesResponse = {
-  success: boolean;
-  message?: string;
-  data?: DashboardProperty[];
-};
+export type PropertiesResponse = PaginatedResponse<DashboardProperty>;
 
 export type PropertyResponse = {
   success: boolean;

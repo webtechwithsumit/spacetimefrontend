@@ -1,15 +1,12 @@
 import type { Auction } from "@/components/auction-card/types";
 import type { DashboardProperty } from "@/dashboard/components/property/types";
 import { getMediaUrl } from "@/lib/media";
+import type { PaginatedResponse } from "@/lib/pagination";
 
 export const LIVE_AUCTION_FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80";
 
-export type LiveAuctionsResponse = {
-  success: boolean;
-  message?: string;
-  data?: DashboardProperty[];
-};
+export type LiveAuctionsResponse = PaginatedResponse<DashboardProperty>;
 
 export function formatBidAmount(value?: string) {
   if (!value?.trim()) return "—";

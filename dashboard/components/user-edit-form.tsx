@@ -6,6 +6,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
 import { PageHeader } from "@/dashboard/components/page-header";
+import { SelectField } from "@/dashboard/components/ui";
 import { ALL_USER_ROLES } from "@/dashboard/constants/nav-items";
 import { api, getApiErrorMessage } from "@/lib/api";
 
@@ -222,25 +223,15 @@ export function UserEditForm({ userId }: UserEditFormProps) {
               className={inputClass}
             />
           </div>
-          <div>
-            <label htmlFor="role" className={labelClass}>
-              Role
-            </label>
-            <select
-              id="role"
-              required
-              value={form.role}
-              onChange={(e) => updateField("role", e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Select role</option>
-              {ALL_USER_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectField
+            id="role"
+            label="Role"
+            value={form.role}
+            onChange={(value) => updateField("role", value)}
+            options={ALL_USER_ROLES}
+            placeholder="Select role"
+            clearable={false}
+          />
           <div className="sm:col-span-2">
             <label htmlFor="image" className={labelClass}>
               Profile Image URL

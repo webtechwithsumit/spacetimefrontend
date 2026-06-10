@@ -3,11 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuctionCard } from "@/components/auction-card/auction-card";
 import type { Auction } from "@/components/auction-card/types";
+import { Pagination } from "@/components/pagination";
 import { api, getApiErrorMessage } from "@/lib/api";
 import {
   mapPropertyToAuction,
   type LiveAuctionsResponse,
 } from "@/lib/live-auctions";
+import {
+  buildPaginationParams,
+  DEFAULT_PAGINATION,
+  ITEMS_PER_PAGE,
+  type PaginationMeta,
+} from "@/lib/pagination";
 
 type LiveAuctionsListProps = {
   gridClassName?: string;
@@ -16,11 +23,14 @@ type LiveAuctionsListProps = {
 
 export function LiveAuctionsList({
   gridClassName = "sm:grid-cols-2 xl:grid-cols-3",
-  skeletonCount = 3,
+  skeletonCount = ITEMS_PER_PAGE,
 }: LiveAuctionsListProps) {
   const [auctions, setAuctions] = useState<Auction[]>([]);
+  const [pagination, setPagination] =
+    useState<PaginationMeta>(DEFAULT_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchLiveAuctions = useCallback(async () => {
     setLoading(true);
@@ -29,20 +39,24 @@ export function LiveAuctionsList({
     try {
       const { data } = await api.get<LiveAuctionsResponse>(
         "/api/properties/live-auctions",
+        { params: buildPaginationParams(currentPage) },
       );
       if (!data.success) {
         setError(data.message || "Failed to load live auctions");
         setAuctions([]);
+        setPagination(DEFAULT_PAGINATION);
         return;
       }
       setAuctions((data.data ?? []).map(mapPropertyToAuction));
+      setPagination(data.pagination ?? DEFAULT_PAGINATION);
     } catch (err) {
       setError(getApiErrorMessage(err));
       setAuctions([]);
+      setPagination(DEFAULT_PAGINATION);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchLiveAuctions();
@@ -51,12 +65,14 @@ export function LiveAuctionsList({
   if (loading) {
     return (
       <div className={`grid gap-6 ${gridClassName}`}>
-        {Array.from({ length: skeletonCount }).map((_, index) => (
-          <div
-            key={index}
-            className="h-96 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
-          />
-        ))}
+        {Array.from({ length: Math.min(skeletonCount, ITEMS_PER_PAGE) }).map(
+          (_, index) => (
+            <div
+              key={index}
+              className="h-96 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
+            />
+          ),
+        )}
       </div>
     );
   }
@@ -83,10 +99,17 @@ export function LiveAuctionsList({
   }
 
   return (
-    <div className={`grid gap-6 ${gridClassName}`}>
-      {auctions.map((auction) => (
-        <AuctionCard key={auction.id} auction={auction} />
-      ))}
-    </div>
+    <>
+      <div className={`grid gap-6 ${gridClassName}`}>
+        {auctions.map((auction) => (
+          <AuctionCard key={auction.id} auction={auction} />
+        ))}
+      </div>
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </>
   );
 }

@@ -1,5 +1,5 @@
-import { UsersManagement } from "@/dashboard/components/users-management";
+import { UsersList } from "@/dashboard/components/users-list";
 
 export default function UsersPage() {
-  return <UsersManagement />;
+  return <UsersList />;
 }

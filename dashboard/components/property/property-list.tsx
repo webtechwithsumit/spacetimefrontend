@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useToast } from "@/components/toast-provider";
@@ -18,10 +18,13 @@ import {
 } from "@/dashboard/components/property/types";
 import { PROPERTY_MANAGER_ROLES } from "@/dashboard/constants/property";
 import { api, getApiErrorMessage } from "@/lib/api";
+import {
+  buildPaginationParams,
+  DEFAULT_PAGINATION,
+  type PaginationMeta,
+} from "@/lib/pagination";
 
 type PropertyColumn = DataTableColumn<DashboardProperty>;
-
-const ITEMS_PER_PAGE = 200;
 
 const actionLinkClass =
   "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors";
@@ -82,30 +85,20 @@ const INITIAL_COLUMNS: PropertyColumn[] = [
   { id: "sellerId", label: "Seller", visible: true },
 ];
 
-/** Substring match, else characters of query in order inside title (typo-tolerant). */
-function fuzzyTitleMatch(title: string, queryRaw: string): boolean {
-  const q = queryRaw.trim().toLowerCase();
-  if (!q) return true;
-  const n = String(title).toLowerCase();
-  if (n.includes(q)) return true;
-  let qi = 0;
-  for (let i = 0; i < n.length && qi < q.length; i++) {
-    if (n[i] === q[qi]) qi++;
-  }
-  return qi === q.length;
-}
-
 export function PropertyList() {
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
   const canManage = PROPERTY_MANAGER_ROLES.includes(user?.role ?? "");
 
-  const [allProperties, setAllProperties] = useState<DashboardProperty[]>([]);
+  const [properties, setProperties] = useState<DashboardProperty[]>([]);
+  const [pagination, setPagination] =
+    useState<PaginationMeta>(DEFAULT_PAGINATION);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [columns, setColumns] = useState<PropertyColumn[]>(INITIAL_COLUMNS);
   const [searchTitle, setSearchTitle] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [removeTarget, setRemoveTarget] = useState<{
     id: string;
     title: string;
@@ -118,47 +111,47 @@ export function PropertyList() {
     setError("");
 
     try {
-      const { data } = await api.get<PropertiesResponse>("/api/properties");
+      const { data } = await api.get<PropertiesResponse>("/api/properties", {
+        params: {
+          ...buildPaginationParams(currentPage),
+          ...(debouncedSearch ? { title: debouncedSearch } : {}),
+        },
+      });
       if (!data.success) {
         setError(data.message || "Failed to load properties");
-        setAllProperties([]);
+        setProperties([]);
+        setPagination(DEFAULT_PAGINATION);
         return;
       }
-      setAllProperties(data.data ?? []);
+      setProperties(data.data ?? []);
+      setPagination(data.pagination ?? DEFAULT_PAGINATION);
     } catch (err) {
       setError(getApiErrorMessage(err));
-      setAllProperties([]);
+      setProperties([]);
+      setPagination(DEFAULT_PAGINATION);
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentPage, debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTitle.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTitle]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTitle]);
-
-  const filteredProperties = useMemo(() => {
-    return allProperties.filter((property) =>
-      fuzzyTitleMatch(property.title ?? "", searchTitle),
-    );
-  }, [allProperties, searchTitle]);
-
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredProperties.length / ITEMS_PER_PAGE)),
-    [filteredProperties.length],
-  );
-
-  const paginatedProperties = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProperties.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProperties, currentPage]);
-
   function handleClear() {
     setSearchTitle("");
+    setDebouncedSearch("");
     setCurrentPage(1);
   }
 
@@ -311,7 +304,7 @@ export function PropertyList() {
         <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-12 text-center dark:border-zinc-800 dark:bg-zinc-950">
           <p className="text-zinc-500 dark:text-zinc-400">Please Wait!</p>
         </div>
-      ) : filteredProperties.length === 0 ? (
+      ) : properties.length === 0 ? (
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-8 text-center dark:border-indigo-900/50 dark:bg-indigo-950/30">
           <h4 className="font-semibold text-indigo-900 dark:text-indigo-200">
             No Data Found
@@ -324,17 +317,17 @@ export function PropertyList() {
         <>
           <DataTable
             columns={columns}
-            data={paginatedProperties}
+            data={properties}
             getRowKey={(item) => item._id}
             renderTableCell={renderTableCell}
-            currentPage={currentPage}
-            itemsPerPage={ITEMS_PER_PAGE}
+            currentPage={pagination.page}
+            itemsPerPage={pagination.limit}
             renderActions={canManage ? renderActions : undefined}
             actionsLabel="Actions"
           />
           <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
             onPageChange={setCurrentPage}
           />
         </>
