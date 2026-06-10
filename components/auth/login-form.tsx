@@ -6,13 +6,23 @@ import { FormEvent, useState } from "react";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
+import { API_BASE_URL } from "@/lib/api";
+
+type LoginResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    user: Record<string, unknown>;
+    token: string;
+  };
+};
 
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setPending(true);
@@ -27,7 +37,33 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data: LoginResponse = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.message || "Login failed");
+        setPending(false);
+        return;
+      }
+
+      if (data.data?.token) {
+        localStorage.setItem("spacetime_token", data.data.token);
+      }
+      if (data.data?.user) {
+        localStorage.setItem("spacetime_user", JSON.stringify(data.data.user));
+      }
+
+      router.push("/dashboard");
+    } catch {
+      setError("Unable to connect to server. Please try again.");
+      setPending(false);
+    }
   }
 
   return (
