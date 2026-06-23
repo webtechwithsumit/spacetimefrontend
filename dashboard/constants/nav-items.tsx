@@ -55,10 +55,11 @@ export const dashboardNavItems: DashboardNavItem[] = [
   },
   {
     id: "buyers",
-    label: "Buyers",
+    label: "My Bids",
     href: "/dashboard/buyers",
     icon: <BuyersIcon />,
-    roles: ["Buyer"],
+    roles: ["Buyer", "Broker"],
+    description: "View properties you have bid on",
   },
   {
     id: "sellers",

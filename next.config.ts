@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 function apiImageRemotePattern() {
   const apiBase =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002";
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.spacetime.com.co";
 
   try {
     const url = new URL(apiBase);

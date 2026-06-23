@@ -2,23 +2,47 @@ import type { Auction } from "@/components/auction-card/types";
 import type { DashboardProperty } from "@/dashboard/components/property/types";
 import { getMediaUrl } from "@/lib/media";
 import type { PaginatedResponse } from "@/lib/pagination";
+import {
+  formatIndianNumber,
+  parseIndianNumber,
+} from "@/lib/property-form-utils";
 
 export const LIVE_AUCTION_FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80";
 
-export type LiveAuctionsResponse = PaginatedResponse<DashboardProperty>;
+export type LiveAuctionsResponse = PaginatedResponse<
+  DashboardProperty & { currentBidAmount?: number }
+>;
 
-export function formatBidAmount(value?: string) {
-  if (!value?.trim()) return "—";
-  const cleaned = value.replace(/[,\s₹]/g, "").trim();
-  if (!cleaned) return "—";
-  return `₹${value.trim()}`;
+export type LiveAuctionResponse = {
+  success: boolean;
+  message?: string;
+  data?: DashboardProperty & {
+    currentBidAmount?: number;
+    leadingBidderId?: string | null;
+    leadingBidAmount?: number | null;
+    userLastBidAmount?: number | null;
+  };
+};
+
+export function formatBidAmount(value?: string | number) {
+  if (value == null || value === "") return "—";
+  const num =
+    typeof value === "number" ? value : parseIndianNumber(String(value));
+  if (!num) return "—";
+  return `₹${formatIndianNumber(num)}`;
 }
 
-export function mapPropertyToAuction(property: DashboardProperty): Auction {
+export function mapPropertyToAuction(
+  property: DashboardProperty & { currentBidAmount?: number },
+): Auction {
   const location = [property.microMarketLocality, property.city]
     .filter(Boolean)
     .join(", ");
+
+  const currentBidAmount =
+    property.currentBidAmount ??
+    parseIndianNumber(property.startingBidAmount || "");
 
   return {
     id: property._id,
@@ -30,8 +54,67 @@ export function mapPropertyToAuction(property: DashboardProperty): Auction {
     title: property.title,
     location: location || property.city || "—",
     endsAt: property.auctionEndDateTime || new Date().toISOString(),
-    currentBid: formatBidAmount(property.startingBidAmount),
+    currentBid: formatBidAmount(currentBidAmount),
     startingBid: formatBidAmount(property.startingBidAmount),
     isLive: property.auctionStatus === "Live",
+  };
+}
+
+export function mapPropertyToBidProperty(
+  property: DashboardProperty & { currentBidAmount?: number },
+) {
+  const auction = mapPropertyToAuction(property);
+  const images = (property.images ?? []).map(getMediaUrl);
+  const image = images[0] || LIVE_AUCTION_FALLBACK_IMAGE;
+
+  const currentBidAmount =
+    property.currentBidAmount ??
+    parseIndianNumber(property.startingBidAmount || "");
+
+  const address =
+    [property.address, property.microMarketLocality, property.city, property.state]
+      .filter(Boolean)
+      .join(", ") || "—";
+
+  const pricePerSqftValue = parseIndianNumber(property.pricePerSqft || "");
+  const pricePerSqft = pricePerSqftValue
+    ? `₹${formatIndianNumber(pricePerSqftValue)} / Sq.ft`
+    : "—";
+
+  const details = [
+    { label: "Property Type", value: property.category || "—" },
+    { label: "Building Type", value: property.buildingType || "—" },
+    {
+      label: "Total Area",
+      value: property.area || property.totalCarpetArea || "—",
+    },
+    { label: "City", value: property.city || "—" },
+    {
+      label: "Starting Bid",
+      value: formatBidAmount(property.startingBidAmount),
+    },
+    { label: "Bid Increment", value: formatBidAmount(property.bidIncrement) },
+  ];
+
+  return {
+    ...auction,
+    images: images.length ? images : [image],
+    area: property.area || property.totalCarpetArea || "—",
+    buildingType: property.buildingType || property.category || "—",
+    status: property.occupancyStatus || property.status || "—",
+    address,
+    pricePerSqft,
+    startsAt: property.auctionStartDateTime || new Date().toISOString(),
+    description: property.description?.trim() || "No description available.",
+    details,
+    bidIncrement: property.bidIncrement || "",
+    currentBidAmount,
+    sellerId:
+      typeof property.sellerId === "string"
+        ? property.sellerId
+        : property.sellerId?._id,
+    leadingBidderId: property.leadingBidderId ?? null,
+    leadingBidAmount: property.leadingBidAmount ?? null,
+    userLastBidAmount: property.userLastBidAmount ?? null,
   };
 }

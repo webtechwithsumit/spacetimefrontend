@@ -21,6 +21,10 @@ export const DEFAULT_PAGINATION: PaginationMeta = {
   totalPages: 1,
 };
 
-export function buildPaginationParams(page: number, limit = ITEMS_PER_PAGE) {
-  return { page, limit };
+export function buildPaginationParams(
+  page: number,
+  limit = ITEMS_PER_PAGE,
+  sort?: string,
+) {
+  return { page, limit, ...(sort ? { sort } : {}) };
 }

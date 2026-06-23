@@ -2,7 +2,8 @@ import axios from "axios";
 import { getStoredToken } from "./auth";
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.spacetime.com.co";
+// process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002";
 
 let apiToken: string | null =
   typeof window !== "undefined" ? getStoredToken() : null;

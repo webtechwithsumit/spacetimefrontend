@@ -19,11 +19,17 @@ import {
 type LiveAuctionsListProps = {
   gridClassName?: string;
   skeletonCount?: number;
+  limit?: number;
+  sort?: "latest" | "ending";
+  showPagination?: boolean;
 };
 
 export function LiveAuctionsList({
   gridClassName = "sm:grid-cols-2 xl:grid-cols-3",
   skeletonCount = ITEMS_PER_PAGE,
+  limit = ITEMS_PER_PAGE,
+  sort = "ending",
+  showPagination = true,
 }: LiveAuctionsListProps) {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [pagination, setPagination] =
@@ -39,7 +45,7 @@ export function LiveAuctionsList({
     try {
       const { data } = await api.get<LiveAuctionsResponse>(
         "/api/properties/live-auctions",
-        { params: buildPaginationParams(currentPage) },
+        { params: buildPaginationParams(currentPage, limit, sort) },
       );
       if (!data.success) {
         setError(data.message || "Failed to load live auctions");
@@ -56,7 +62,7 @@ export function LiveAuctionsList({
     } finally {
       setLoading(false);
     }
-  }, [currentPage]);
+  }, [currentPage, limit, sort]);
 
   useEffect(() => {
     fetchLiveAuctions();
@@ -65,7 +71,7 @@ export function LiveAuctionsList({
   if (loading) {
     return (
       <div className={`grid gap-6 ${gridClassName}`}>
-        {Array.from({ length: Math.min(skeletonCount, ITEMS_PER_PAGE) }).map(
+        {Array.from({ length: Math.min(skeletonCount, limit) }).map(
           (_, index) => (
             <div
               key={index}
@@ -100,16 +106,18 @@ export function LiveAuctionsList({
 
   return (
     <>
-      <div className={`grid gap-6 ${gridClassName}`}>
+      <div className={`grid items-stretch gap-6 ${gridClassName}`}>
         {auctions.map((auction) => (
           <AuctionCard key={auction.id} auction={auction} />
         ))}
       </div>
-      <Pagination
-        currentPage={pagination.page}
-        totalPages={pagination.totalPages}
-        onPageChange={setCurrentPage}
-      />
+      {showPagination && (
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </>
   );
 }

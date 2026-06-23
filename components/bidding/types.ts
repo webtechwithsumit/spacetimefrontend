@@ -10,4 +10,10 @@ export type BidProperty = Auction & {
   startsAt: string;
   description: string;
   details: { label: string; value: string }[];
+  bidIncrement?: string;
+  currentBidAmount?: number;
+  sellerId?: string;
+  leadingBidderId?: string | null;
+  leadingBidAmount?: number | null;
+  userLastBidAmount?: number | null;
 };
