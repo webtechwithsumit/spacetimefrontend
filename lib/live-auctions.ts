@@ -10,19 +10,19 @@ import {
 export const LIVE_AUCTION_FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80";
 
-export type LiveAuctionsResponse = PaginatedResponse<
-  DashboardProperty & { currentBidAmount?: number }
->;
+export type LiveAuctionProperty = DashboardProperty & {
+  currentBidAmount?: number;
+  leadingBidderId?: string | null;
+  leadingBidAmount?: number | null;
+  userLastBidAmount?: number | null;
+};
+
+export type LiveAuctionsResponse = PaginatedResponse<LiveAuctionProperty>;
 
 export type LiveAuctionResponse = {
   success: boolean;
   message?: string;
-  data?: DashboardProperty & {
-    currentBidAmount?: number;
-    leadingBidderId?: string | null;
-    leadingBidAmount?: number | null;
-    userLastBidAmount?: number | null;
-  };
+  data?: LiveAuctionProperty;
 };
 
 export function formatBidAmount(value?: string | number) {
@@ -33,9 +33,7 @@ export function formatBidAmount(value?: string | number) {
   return `₹${formatIndianNumber(num)}`;
 }
 
-export function mapPropertyToAuction(
-  property: DashboardProperty & { currentBidAmount?: number },
-): Auction {
+export function mapPropertyToAuction(property: LiveAuctionProperty): Auction {
   const location = [property.microMarketLocality, property.city]
     .filter(Boolean)
     .join(", ");
@@ -60,9 +58,7 @@ export function mapPropertyToAuction(
   };
 }
 
-export function mapPropertyToBidProperty(
-  property: DashboardProperty & { currentBidAmount?: number },
-) {
+export function mapPropertyToBidProperty(property: LiveAuctionProperty) {
   const auction = mapPropertyToAuction(property);
   const images = (property.images ?? []).map(getMediaUrl);
   const image = images[0] || LIVE_AUCTION_FALLBACK_IMAGE;
