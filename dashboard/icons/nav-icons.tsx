@@ -133,6 +133,22 @@ export function UsersIcon({ className = "size-4" }: NavIconProps) {
   );
 }
 
+export function BidMonitorIcon({ className = "size-4" }: NavIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+    >
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ className = "size-3" }: NavIconProps) {
   return (
     <svg

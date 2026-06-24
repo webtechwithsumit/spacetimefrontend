@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardNavLinks } from "@/dashboard/components/dashboard-nav-links";
 import { getUserInitials } from "@/lib/auth";
 
@@ -27,6 +28,7 @@ export function DashboardSidebar() {
           <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-900 dark:text-white">
             {displayName}
           </p>
+          <ThemeToggle />
           <Link
             href="/dashboard/profile"
             title="Profile"

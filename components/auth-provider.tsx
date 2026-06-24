@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { clearApiToken, setApiToken } from "@/lib/api";
+import { clearApiToken, setApiToken, setUnauthorizedHandler } from "@/lib/api";
 import {
   AuthUser,
   clearStoredSession,
@@ -45,6 +45,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsReady(true);
   }, []);
 
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setToken(null);
+      router.replace("/login");
+    });
+
+    return () => setUnauthorizedHandler(() => {});
+  }, [router]);
+
   const login = useCallback((nextUser: AuthUser, nextToken: string) => {
     setStoredSession(nextUser, nextToken);
     setApiToken(nextToken);
@@ -62,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearApiToken();
     setUser(null);
     setToken(null);
-    router.push("/");
+    router.replace("/login");
   }, [router]);
 
   const value = useMemo(

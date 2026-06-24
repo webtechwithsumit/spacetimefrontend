@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   AuctionsIcon,
+  BidMonitorIcon,
   BrokersIcon,
   BuyersIcon,
   OverviewIcon,
@@ -44,6 +45,14 @@ export const dashboardNavItems: DashboardNavItem[] = [
     href: "/dashboard/auctions",
     icon: <AuctionsIcon />,
     description: "Browse and bid on live property auctions",
+  },
+  {
+    id: "bid-monitor",
+    label: "Bid Monitor",
+    href: "/dashboard/bid-monitor",
+    icon: <BidMonitorIcon />,
+    roles: ["Seller", "Broker", "Admin", "Super-Admin"],
+    description: "View live bidding activity and leading bidders",
   },
   {
     id: "properties",

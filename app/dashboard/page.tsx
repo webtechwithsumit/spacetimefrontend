@@ -1,12 +1,9 @@
-import { PageHeader } from "@/dashboard/components/page-header";
+import { DashboardOverview } from "@/dashboard/components/dashboard-overview";
 
 export default function OverviewPage() {
   return (
     <div>
-      <PageHeader
-        title="Overview"
-        description="Welcome to your SpaceTime dashboard."
-      />
+      <DashboardOverview />
     </div>
   );
 }

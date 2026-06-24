@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -86,6 +87,8 @@ const INITIAL_COLUMNS: PropertyColumn[] = [
 ];
 
 export function PropertyList() {
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get("status")?.trim() ?? "";
   const { user, isAuthenticated } = useAuth();
   const toast = useToast();
   const canManage = PROPERTY_MANAGER_ROLES.includes(user?.role ?? "");
@@ -115,6 +118,7 @@ export function PropertyList() {
         params: {
           ...buildPaginationParams(currentPage),
           ...(debouncedSearch ? { title: debouncedSearch } : {}),
+          ...(statusFilter ? { auctionStatus: statusFilter } : {}),
         },
       });
       if (!data.success) {
@@ -132,7 +136,7 @@ export function PropertyList() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, currentPage, debouncedSearch]);
+  }, [isAuthenticated, currentPage, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -143,7 +147,7 @@ export function PropertyList() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchProperties();
@@ -265,6 +269,21 @@ export function PropertyList() {
           Only Seller or Broker can create and manage their own properties. You can view all listings below.
         </div>
       )}
+
+      {statusFilter ? (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">Filtered by:</span>
+          <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+            {statusFilter}
+          </span>
+          <Link
+            href="/dashboard/property"
+            className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            Clear filter
+          </Link>
+        </div>
+      ) : null}
 
       <div className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">

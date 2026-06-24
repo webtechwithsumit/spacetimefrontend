@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Pagination } from "@/components/pagination";
 import { PageHeader } from "@/dashboard/components/page-header";
 import { btnPrimaryClass } from "@/dashboard/components/ui";
+import { ALL_USER_ROLES } from "@/dashboard/constants/nav-items";
 import { api, getApiErrorMessage } from "@/lib/api";
 import {
   buildPaginationParams,
@@ -32,7 +33,16 @@ function roleBadgeClass(role: string) {
   if (role === "Admin") {
     return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300";
   }
-  return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300";
+  if (role === "Buyer") {
+    return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300";
+  }
+  if (role === "Seller") {
+    return "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300";
+  }
+  if (role === "Broker") {
+    return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300";
+  }
+  return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
 }
 
 export function UsersList() {
@@ -45,6 +55,20 @@ export function UsersList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, roleFilter]);
 
   const fetchUsers = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -54,7 +78,11 @@ export function UsersList() {
 
     try {
       const { data } = await api.get<UsersResponse>("/api/users", {
-        params: buildPaginationParams(currentPage),
+        params: {
+          ...buildPaginationParams(currentPage),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+          ...(roleFilter ? { role: roleFilter } : {}),
+        },
       });
 
       if (!data.success) {
@@ -73,7 +101,7 @@ export function UsersList() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, currentPage]);
+  }, [isAuthenticated, currentPage, debouncedSearch, roleFilter]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -117,6 +145,68 @@ export function UsersList() {
           {error}
         </p>
       )}
+
+      <div className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="grid gap-4 sm:grid-cols-[1fr_180px_auto] sm:items-end">
+          <div>
+            <label
+              htmlFor="searchUsers"
+              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Search
+            </label>
+            <input
+              id="searchUsers"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Name, email, or phone"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-2.5 text-sm text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:border-indigo-400 dark:focus:bg-zinc-900"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="roleFilter"
+              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Role
+            </label>
+            <select
+              id="roleFilter"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-2.5 text-sm text-zinc-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-white dark:focus:border-indigo-400 dark:focus:bg-zinc-900"
+            >
+              <option value="">All roles</option>
+              {ALL_USER_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery("");
+              setRoleFilter("");
+            }}
+            disabled={!searchQuery && !roleFilter}
+            className="rounded-full border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            Clear
+          </button>
+        </div>
+        {(debouncedSearch || roleFilter) && (
+          <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+            {loading
+              ? "Filtering..."
+              : `${pagination.total} user${pagination.total === 1 ? "" : "s"} found`}
+            {roleFilter ? ` · Role: ${roleFilter}` : ""}
+            {debouncedSearch ? ` · Search: "${debouncedSearch}"` : ""}
+          </p>
+        )}
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="overflow-x-auto">

@@ -1,11 +1,9 @@
 import type { NextConfig } from "next";
+import { API_BASE_URL } from "./lib/api-config";
 
 function apiImageRemotePattern() {
-  const apiBase =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.spacetime.com.co";
-
   try {
-    const url = new URL(apiBase);
+    const url = new URL(API_BASE_URL);
     return {
       protocol: url.protocol.replace(":", "") as "http" | "https",
       hostname: url.hostname,
@@ -13,12 +11,7 @@ function apiImageRemotePattern() {
       pathname: "/uploads/**",
     };
   } catch {
-    return {
-      protocol: "http" as const,
-      hostname: "localhost",
-      port: "3002",
-      pathname: "/uploads/**",
-    };
+    throw new Error(`Invalid API_BASE_URL in lib/api-config.ts: ${API_BASE_URL}`);
   }
 }
 

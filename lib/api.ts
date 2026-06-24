@@ -1,12 +1,15 @@
 import axios from "axios";
-import { getStoredToken } from "./auth";
-
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.spacetime.com.co";
-// process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002";
+import { API_BASE_URL } from "@/lib/api-config";
+import { clearStoredSession, getStoredToken } from "./auth";
 
 let apiToken: string | null =
   typeof window !== "undefined" ? getStoredToken() : null;
+
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler;
+}
 
 export function setApiToken(token: string) {
   apiToken = token;
@@ -20,6 +23,12 @@ function resolveApiToken(): string | null {
   if (apiToken) return apiToken;
   apiToken = getStoredToken();
   return apiToken;
+}
+
+function handleUnauthorized() {
+  clearApiToken();
+  clearStoredSession();
+  unauthorizedHandler?.();
 }
 
 export const api = axios.create({
@@ -39,6 +48,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      handleUnauthorized();
+    }
+    return Promise.reject(error);
+  },
+);
 
 type ApiErrorBody = {
   message?: string;
