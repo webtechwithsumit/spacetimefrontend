@@ -10,7 +10,7 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="size-9 rounded-full bg-zinc-800/80 dark:bg-zinc-800/80" />;
+    return <div className="size-9 rounded-full bg-zinc-100" />;
   }
 
   const isDark = resolvedTheme === "dark";

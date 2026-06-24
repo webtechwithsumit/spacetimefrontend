@@ -1,29 +1,25 @@
 "use client";
 
 import Image from "next/image";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const SPLASH_DURATION_MS = 2000;
 const FADE_DURATION_MS = 500;
 const STORAGE_KEY = "spacetime-splash-shown";
 
-function useSystemDarkMode() {
-  const [isDark, setIsDark] = useState(false);
+function useSplashDarkMode() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    setIsDark(media.matches);
+  useEffect(() => setMounted(true), []);
 
-    const onChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
-
-  return isDark;
+  if (!mounted) return false;
+  return resolvedTheme === "dark";
 }
 
 export function SplashScreen() {
-  const isSystemDark = useSystemDarkMode();
+  const isDark = useSplashDarkMode();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
@@ -52,11 +48,11 @@ export function SplashScreen() {
   return (
     <div
       className={`fixed inset-0 z-[100] flex items-center transition-opacity duration-500 ${fadeOut ? "opacity-0" : "opacity-100"
-        } ${isSystemDark ? "bg-black" : "bg-[#f5f5f0]"}`}
+        } ${isDark ? "bg-black" : "bg-[#f5f5f0]"}`}
     >
       <Image
         src={
-          isSystemDark ? "/images/blackwhite.png" : "/images/whiteblack.png"
+          isDark ? "/images/blackwhite.png" : "/images/whiteblack.png"
         }
         alt="SpaceTime"
         width={1920}
