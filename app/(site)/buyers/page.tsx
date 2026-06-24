@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/site/page-header";
+import { BuyersContent } from "@/components/site/buyers-content";
 
 export default function BuyersPage() {
   return (
@@ -7,6 +8,7 @@ export default function BuyersPage() {
         title="Buyers"
         description="Find your next property through transparent live auctions. Register, bid, and close deals with confidence."
       />
+      <BuyersContent />
     </main>
   );
 }

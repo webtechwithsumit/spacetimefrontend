@@ -439,6 +439,14 @@ export function BiddingForm({ property, onBidPlaced }: BiddingFormProps) {
           ))}
         </div>
 
+        {!isAuthenticated ? (
+          <Link
+            href="/login"
+            className="flex w-full items-center justify-center rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-900"
+          >
+            Log in to Bid
+          </Link>
+        ) : (
         <button
           type="submit"
           disabled={pending || !canBid}
@@ -448,14 +456,13 @@ export function BiddingForm({ property, onBidPlaced }: BiddingFormProps) {
             ? "Auction Ended"
             : isOwnProperty
               ? "Bidding Not Available"
-            : !isAuthenticated
-              ? "Log in to Bid"
               : pending
                 ? "Placing Bid..."
                 : isOutbid
                   ? "Place Higher Bid"
                   : "Place Bid"}
         </button>
+        )}
       </form>
       )}
 
