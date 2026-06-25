@@ -172,14 +172,26 @@ function buildMetricCards(data: DashboardOverviewData): StatCardProps[] {
         ),
       },
       {
-        label: "Scheduled",
-        value: data.properties.scheduledListings,
-        hint: "Upcoming",
-        href: "/dashboard/property?status=Scheduled",
+        label: "Upcoming",
+        value: data.properties.upcomingListings,
+        hint: "Live in 10 days",
+        href: "/dashboard/property?status=Upcoming",
         accent: "sky",
         icon: (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        ),
+      },
+      {
+        label: "Ended",
+        value: data.properties.endedListings,
+        hint: "Auction closed",
+        href: "/dashboard/property?status=Ended",
+        accent: "zinc",
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="9" /><path d="m9 9 6 6M15 9l-6 6" />
           </svg>
         ),
       },

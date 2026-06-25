@@ -50,14 +50,18 @@ export function AuthUserMenu() {
 
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setOpen(false)}
+            className="block border-b border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
             <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
               {user.name}
             </p>
             <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
               {user.email}
             </p>
-          </div>
+          </Link>
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}

@@ -1,5 +1,6 @@
 import type { Auction } from "@/components/auction-card/types";
 import type { DashboardProperty } from "@/dashboard/components/property/types";
+import { isPropertyLive } from "@/lib/auction-stage";
 import { getMediaUrl } from "@/lib/media";
 import type { PaginatedResponse } from "@/lib/pagination";
 import {
@@ -54,7 +55,7 @@ export function mapPropertyToAuction(property: LiveAuctionProperty): Auction {
     endsAt: property.auctionEndDateTime || new Date().toISOString(),
     currentBid: formatBidAmount(currentBidAmount),
     startingBid: formatBidAmount(property.startingBidAmount),
-    isLive: property.auctionStatus === "Live",
+    isLive: isPropertyLive(property),
   };
 }
 

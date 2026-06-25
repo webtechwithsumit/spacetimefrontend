@@ -80,7 +80,7 @@ export function PropertyBasicFields({
                 className={`${inputClass} min-h-[42px] flex-1`}
                 placeholder="Full address"
               />
-              <button
+              {/* <button
                 type="button"
                 onClick={() =>
                   toast.success(
@@ -101,7 +101,7 @@ export function PropertyBasicFields({
                   <circle cx="12" cy="11" r="2.5" />
                 </svg>
                 Location Picker
-              </button>
+              </button> */}
             </div>
           </div>
 

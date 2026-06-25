@@ -12,6 +12,13 @@ import type {
 } from "@/lib/live-bid-monitor";
 import { getMediaUrl } from "@/lib/media";
 
+type MonitorTab = "live" | "ended";
+
+const tabs: { id: MonitorTab; label: string }[] = [
+  { id: "live", label: "Live Auctions" },
+  { id: "ended", label: "Ended Auctions" },
+];
+
 function formatDate(value: string) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("en-IN", {
@@ -24,9 +31,16 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
+function PropertyBidCard({
+  item,
+  variant,
+}: {
+  item: LiveBidMonitorItem;
+  variant: MonitorTab;
+}) {
   const [open, setOpen] = useState(true);
   const location = [item.microMarketLocality, item.city].filter(Boolean).join(", ");
+  const isEnded = variant === "ended";
 
   return (
     <article className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -51,16 +65,27 @@ function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
               {item.title}
             </h3>
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Live
+            <span
+              className={
+                isEnded
+                  ? "rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                  : "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+              }
+            >
+              {isEnded ? "Ended" : "Live"}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {location || "—"} · Ends {formatDate(item.auctionEndDateTime)}
+            {location || "—"} ·{" "}
+            {isEnded
+              ? `Ended ${formatDate(item.auctionEndDateTime)}`
+              : `Ends ${formatDate(item.auctionEndDateTime)}`}
           </p>
           <div className="mt-2 flex flex-wrap gap-4 text-xs">
             <span>
-              <span className="text-zinc-500">Current bid:</span>{" "}
+              <span className="text-zinc-500">
+                {isEnded ? "Final bid:" : "Current bid:"}
+              </span>{" "}
               <strong>{formatBidAmount(item.currentBidAmount)}</strong>
             </span>
             <span>
@@ -73,12 +98,19 @@ function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
             </span>
           </div>
           {item.leadingBidder ? (
-            <p className="mt-1.5 text-xs text-emerald-700 dark:text-emerald-300">
-              Leading: <strong>{item.leadingBidder.name}</strong> (
+            <p
+              className={`mt-1.5 text-xs ${
+                isEnded
+                  ? "text-zinc-700 dark:text-zinc-300"
+                  : "text-emerald-700 dark:text-emerald-300"
+              }`}
+            >
+              {isEnded ? "Winner" : "Leading"}:{" "}
+              <strong>{item.leadingBidder.name}</strong> (
               {formatBidAmount(item.leadingBidder.amount)})
             </p>
           ) : (
-            <p className="mt-1.5 text-xs text-zinc-500">No bids yet</p>
+            <p className="mt-1.5 text-xs text-zinc-500">No bids placed</p>
           )}
         </div>
         <svg
@@ -99,7 +131,7 @@ function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
         <div className="px-4 py-3">
           {item.bids.length === 0 ? (
             <p className="py-4 text-center text-sm text-zinc-500">
-              No bids placed on this property yet.
+              No bids were placed on this property.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -140,8 +172,14 @@ function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
                       </td>
                       <td className="px-2 py-2.5">
                         {bid.isLeading ? (
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            Leading
+                          <span
+                            className={
+                              isEnded
+                                ? "rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-semibold text-white dark:bg-white dark:text-zinc-900"
+                                : "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            }
+                          >
+                            {isEnded ? "Winning" : "Leading"}
                           </span>
                         ) : (
                           <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -170,17 +208,19 @@ function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
 }
 
 export function LiveBidMonitor() {
+  const [tab, setTab] = useState<MonitorTab>("live");
   const [items, setItems] = useState<LiveBidMonitorItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchMonitor = useCallback(async () => {
+  const fetchMonitor = useCallback(async (activeTab: MonitorTab) => {
     setLoading(true);
     setError("");
 
     try {
       const { data } = await api.get<LiveBidMonitorResponse>(
         "/api/bids/live-monitor",
+        { params: { status: activeTab } },
       );
 
       if (!data.success) {
@@ -199,23 +239,40 @@ export function LiveBidMonitor() {
   }, []);
 
   useEffect(() => {
-    fetchMonitor();
-  }, [fetchMonitor]);
+    fetchMonitor(tab);
+  }, [fetchMonitor, tab]);
 
   return (
     <div className="w-full">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
-          title="Live Bid Monitor"
-          description="Track active auctions and every bid placed on each property."
+          title="Bid Monitor"
+          description="Track live and ended auctions with full bid history for each property."
         />
         <button
           type="button"
-          onClick={fetchMonitor}
+          onClick={() => fetchMonitor(tab)}
           className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
         >
           Refresh
         </button>
+      </div>
+
+      <div className="mb-6 flex gap-6 border-b border-zinc-200 dark:border-zinc-800">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setTab(item.id)}
+            className={`pb-3 text-sm font-medium transition-colors ${
+              tab === item.id
+                ? "border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {error ? (
@@ -235,9 +292,15 @@ export function LiveBidMonitor() {
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-          <h2 className="text-sm font-semibold">No live auctions with bidding</h2>
+          <h2 className="text-sm font-semibold">
+            {tab === "live"
+              ? "No live auctions right now"
+              : "No ended auctions yet"}
+          </h2>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Properties go live when their auction status is set to Live.
+            {tab === "live"
+              ? "Properties appear here when their auction status is set to Live."
+              : "Completed auctions and their bid history will appear here after the auction ends."}
           </p>
           <Link
             href="/dashboard/property"
@@ -249,10 +312,11 @@ export function LiveBidMonitor() {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            {items.length} live auction{items.length === 1 ? "" : "s"}
+            {items.length} {tab === "live" ? "live" : "ended"} auction
+            {items.length === 1 ? "" : "s"}
           </p>
           {items.map((item) => (
-            <PropertyBidCard key={item.propertyId} item={item} />
+            <PropertyBidCard key={item.propertyId} item={item} variant={tab} />
           ))}
         </div>
       )}

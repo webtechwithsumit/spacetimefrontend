@@ -450,7 +450,7 @@ export function BiddingForm({ property, onBidPlaced }: BiddingFormProps) {
         <button
           type="submit"
           disabled={pending || !canBid}
-          className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-900"
+          className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-900 cursor-pointer"
         >
           {countdown.ended
             ? "Auction Ended"

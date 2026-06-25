@@ -40,7 +40,7 @@ export type DashboardRecentProperty = {
 export type DashboardPropertySummary = {
   totalProperties: number;
   liveListings: number;
-  scheduledListings: number;
+  upcomingListings: number;
   endedListings: number;
   draftListings: number;
   recentProperties: DashboardRecentProperty[];

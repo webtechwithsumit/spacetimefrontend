@@ -18,6 +18,12 @@ import {
   type DashboardProperty,
 } from "@/dashboard/components/property/types";
 import { PROPERTY_MANAGER_ROLES } from "@/dashboard/constants/property";
+import {
+  auctionStageClass,
+  auctionStageLabel,
+  resolveAuctionStage,
+  UPCOMING_AUCTION_DAYS,
+} from "@/lib/auction-stage";
 import { api, getApiErrorMessage } from "@/lib/api";
 import {
   buildPaginationParams,
@@ -26,6 +32,15 @@ import {
 } from "@/lib/pagination";
 
 type PropertyColumn = DataTableColumn<DashboardProperty>;
+
+const STAGE_TABS = [
+  { id: "", label: "All" },
+  { id: "Live", label: "Live" },
+  { id: "Upcoming", label: "Upcoming" },
+  { id: "Ended", label: "Ended" },
+] as const;
+
+const STAGE_FILTER_VALUES = new Set(["Live", "Upcoming", "Ended"]);
 
 const actionLinkClass =
   "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors";
@@ -80,6 +95,7 @@ const INITIAL_COLUMNS: PropertyColumn[] = [
   { id: "title", label: "Title", visible: true },
   { id: "city", label: "City", visible: true },
   { id: "category", label: "Category", visible: true },
+  { id: "auctionStage", label: "Auction Stage", visible: true },
   { id: "area", label: "Area", visible: true },
   { id: "pricePerSqft", label: "Price/sqft", visible: true },
   { id: "status", label: "Status", visible: true },
@@ -118,7 +134,11 @@ export function PropertyList() {
         params: {
           ...buildPaginationParams(currentPage),
           ...(debouncedSearch ? { title: debouncedSearch } : {}),
-          ...(statusFilter ? { auctionStatus: statusFilter } : {}),
+          ...(statusFilter && STAGE_FILTER_VALUES.has(statusFilter)
+            ? { status: statusFilter }
+            : statusFilter
+              ? { auctionStatus: statusFilter }
+              : {}),
         },
       });
       if (!data.success) {
@@ -186,6 +206,16 @@ export function PropertyList() {
       return (
         <span className="font-medium text-zinc-900 dark:text-white">
           {item.title || "—"}
+        </span>
+      );
+    }
+    if (col.id === "auctionStage") {
+      const stage = resolveAuctionStage(item);
+      return (
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${auctionStageClass(stage)}`}
+        >
+          {auctionStageLabel(stage)}
         </span>
       );
     }
@@ -270,7 +300,7 @@ export function PropertyList() {
         </div>
       )}
 
-      {statusFilter ? (
+      {statusFilter && !STAGE_FILTER_VALUES.has(statusFilter) ? (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-zinc-600 dark:text-zinc-400">Filtered by:</span>
           <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
@@ -283,6 +313,33 @@ export function PropertyList() {
             Clear filter
           </Link>
         </div>
+      ) : null}
+
+      <div className="mb-4 flex flex-wrap gap-6 border-b border-zinc-200 dark:border-zinc-800">
+        {STAGE_TABS.map((tab) => {
+          const active = statusFilter === tab.id;
+          const href = tab.id ? `/dashboard/property?status=${tab.id}` : "/dashboard/property";
+
+          return (
+            <Link
+              key={tab.id || "all"}
+              href={href}
+              className={`pb-3 text-sm font-medium transition-colors ${
+                active
+                  ? "border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+              }`}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {statusFilter === "Upcoming" ? (
+        <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
+          Showing properties going live within the next {UPCOMING_AUCTION_DAYS} days.
+        </p>
       ) : null}
 
       <div className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
@@ -326,10 +383,20 @@ export function PropertyList() {
       ) : properties.length === 0 ? (
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-8 text-center dark:border-indigo-900/50 dark:bg-indigo-950/30">
           <h4 className="font-semibold text-indigo-900 dark:text-indigo-200">
-            No Data Found
+            {statusFilter === "Live"
+              ? "No live properties"
+              : statusFilter === "Upcoming"
+                ? "No upcoming properties"
+                : statusFilter === "Ended"
+                  ? "No ended properties"
+                  : "No Data Found"}
           </h4>
           <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
-            You currently don&apos;t have any Data
+            {statusFilter === "Upcoming"
+              ? `Properties appear here when their auction starts within ${UPCOMING_AUCTION_DAYS} days.`
+              : statusFilter
+                ? "Try another filter or create a new property."
+                : "You currently don't have any Data"}
           </p>
         </div>
       ) : (
