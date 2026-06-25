@@ -7,6 +7,7 @@ import type { BidProperty } from "@/components/bidding/types";
 import { BiddingStatusCard } from "@/components/bidding/bidding-status-card";
 import { MessageModal } from "@/components/message-modal";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import { formatBidAmount } from "@/lib/live-auctions";
 import {
   formatIndianNumber,
@@ -226,6 +227,12 @@ export function BiddingForm({ property, onBidPlaced }: BiddingFormProps) {
       setCurrentBid(formatBidAmount(nextAmount));
       setBidAmount("");
       onBidPlaced?.();
+      track("bid_placed", {
+        propertyId: property.id,
+        amount: nextAmount,
+        city: property.location || "",
+        category: property.category || "",
+      });
       showFeedback(
         "Bid placed",
         `Your bid of ${formatBidAmount(nextAmount)} has been placed successfully!`,

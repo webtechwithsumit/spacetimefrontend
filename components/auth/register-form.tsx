@@ -7,6 +7,7 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { track } from "@/lib/analytics";
 
 const REGISTER_ROLES = ["Buyer", "Seller", "Broker"] as const;
 
@@ -86,6 +87,7 @@ export function RegisterForm() {
         return;
       }
 
+      track("signup_completed", { role });
       router.push("/login");
     } catch (error) {
       setError(getApiErrorMessage(error, "Unable to connect to server. Please try again."));

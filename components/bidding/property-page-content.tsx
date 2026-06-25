@@ -7,6 +7,7 @@ import { PropertyGallery } from "@/components/bidding/property-gallery";
 import { PropertyTabs } from "@/components/bidding/property-tabs";
 import type { BidProperty } from "@/components/bidding/types";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import {
   mapPropertyToBidProperty,
   type LiveAuctionResponse,
@@ -37,6 +38,11 @@ export function PropertyPageContent({ propertyId }: PropertyPageContentProps) {
       }
 
       setProperty(mapPropertyToBidProperty(data.data));
+      track("auction_viewed", {
+        propertyId,
+        city: data.data.city || "",
+        category: data.data.category || "",
+      });
     } catch (err) {
       setError(getApiErrorMessage(err, "Failed to load property"));
       setProperty(null);

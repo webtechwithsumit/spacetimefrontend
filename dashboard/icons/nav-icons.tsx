@@ -17,6 +17,25 @@ export function OverviewIcon({ className = "size-4" }: NavIconProps) {
   );
 }
 
+export function AnalyticsIcon({ className = "size-4" }: NavIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+    >
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 17V11" />
+      <path d="M12 17V7" />
+      <path d="M16 17v-4" />
+    </svg>
+  );
+}
+
 export function AuctionsIcon({ className = "size-4" }: NavIconProps) {
   return (
     <svg

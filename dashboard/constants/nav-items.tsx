@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  AnalyticsIcon,
   AuctionsIcon,
   BidMonitorIcon,
   BrokersIcon,
@@ -38,6 +39,30 @@ export const dashboardNavItems: DashboardNavItem[] = [
     label: "Overview",
     href: "/dashboard",
     icon: <OverviewIcon />,
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    icon: <AnalyticsIcon />,
+    roles: ["Admin", "Super-Admin"],
+    description: "Platform metrics and user activity",
+    children: [
+      {
+        id: "analytics-overview",
+        label: "Overview",
+        href: "/dashboard/analytics",
+        icon: <AnalyticsIcon />,
+        roles: ["Admin", "Super-Admin"],
+      },
+      {
+        id: "analytics-user-activity",
+        label: "User Activity",
+        href: "/dashboard/analytics/user-activity",
+        icon: <UsersIcon />,
+        roles: ["Admin", "Super-Admin"],
+        description: "Clicks, page visits, and user journeys",
+      },
+    ],
   },
   {
     id: "auctions",

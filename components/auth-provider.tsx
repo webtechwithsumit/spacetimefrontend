@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { clearApiToken, setApiToken, setUnauthorizedHandler } from "@/lib/api";
+import { identifyUser, resetAnalyticsUser, track } from "@/lib/analytics";
 import {
   AuthUser,
   clearStoredSession,
@@ -55,6 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => setUnauthorizedHandler(() => {});
   }, [router]);
 
+  useEffect(() => {
+    if (user?._id) {
+      identifyUser(user._id, { role: user.role });
+    } else if (isReady) {
+      resetAnalyticsUser();
+    }
+  }, [user, isReady]);
+
   const login = useCallback((nextUser: AuthUser, nextToken: string) => {
     setStoredSession(nextUser, nextToken);
     setApiToken(nextToken);
@@ -68,12 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    track("logout", { role: user?.role });
     clearStoredSession();
     clearApiToken();
     setUser(null);
     setToken(null);
     router.replace("/login");
-  }, [router]);
+  }, [router, user?.role]);
 
   const value = useMemo(
     () => ({

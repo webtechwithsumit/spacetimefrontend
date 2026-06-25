@@ -8,6 +8,7 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthPasswordInput } from "@/components/auth/auth-password-input";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import type { AuthUser } from "@/lib/auth";
 
 type LoginResponse = {
@@ -59,6 +60,7 @@ export function LoginForm() {
       }
 
       login(data.data.user, data.data.token);
+      track("login", { role: data.data.user.role });
       router.push("/dashboard");
     } catch (error) {
       setError(getApiErrorMessage(error, "Unable to connect to server. Please try again."));
