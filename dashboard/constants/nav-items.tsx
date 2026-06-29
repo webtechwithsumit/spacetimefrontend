@@ -65,6 +65,14 @@ export const dashboardNavItems: DashboardNavItem[] = [
     ],
   },
   {
+    id: "blog",
+    label: "Blog",
+    href: "/dashboard/blog",
+    icon: <OverviewIcon />,
+    roles: ["Admin", "Super-Admin"],
+    description: "Create and publish site articles",
+  },
+  {
     id: "auctions",
     label: "Live Auctions",
     href: "/dashboard/auctions",

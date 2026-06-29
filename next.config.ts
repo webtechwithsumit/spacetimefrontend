@@ -8,7 +8,7 @@ function apiImageRemotePattern() {
       protocol: url.protocol.replace(":", "") as "http" | "https",
       hostname: url.hostname,
       ...(url.port ? { port: url.port } : {}),
-      pathname: "/uploads/**",
+      pathname: "/**",
     };
   } catch {
     throw new Error(`Invalid API_BASE_URL in lib/api-config.ts: ${API_BASE_URL}`);

@@ -10,4 +10,5 @@ export const siteNavItems: SiteNavItem[] = [
   { href: "/buyers", label: "Buyers" },
   { href: "/sellers", label: "Sellers" },
   { href: "/brokers", label: "Brokers" },
+  { href: "/blog", label: "Blog" },
 ];
