@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useToast } from "@/components/toast-provider";
@@ -25,6 +25,7 @@ import {
   UPCOMING_AUCTION_DAYS,
 } from "@/lib/auction-stage";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { trackPropertySearch } from "@/lib/analytics";
 import {
   buildPaginationParams,
   DEFAULT_PAGINATION,
@@ -71,6 +72,25 @@ function AuctionIcon() {
       className="size-3.5"
     >
       <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M4 14h4M12 10h4M20 16h-4" />
+    </svg>
+  );
+}
+
+function AnalyticsIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="size-3.5"
+    >
+      <path d="M4 19V5" />
+      <path d="M4 19h16" />
+      <path d="M8 17V11" />
+      <path d="M12 17V7" />
+      <path d="M16 17v-4" />
     </svg>
   );
 }
@@ -123,6 +143,7 @@ export function PropertyList() {
     title: string;
   } | null>(null);
   const [removing, setRemoving] = useState(false);
+  const lastTrackedSearch = useRef("");
 
   const fetchProperties = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -149,6 +170,23 @@ export function PropertyList() {
       }
       setProperties(data.data ?? []);
       setPagination(data.pagination ?? DEFAULT_PAGINATION);
+
+      const hasFilters = Boolean(debouncedSearch || statusFilter);
+      if (hasFilters) {
+        const signature = JSON.stringify({ debouncedSearch, statusFilter });
+        if (signature !== lastTrackedSearch.current) {
+          lastTrackedSearch.current = signature;
+          trackPropertySearch(
+            {
+              query: debouncedSearch,
+              category: statusFilter,
+              source: "dashboard_properties",
+              resultCount: (data.data ?? []).length,
+            },
+            "/dashboard/property",
+          );
+        }
+      }
     } catch (err) {
       setError(getApiErrorMessage(err));
       setProperties([]);
@@ -242,6 +280,16 @@ export function PropertyList() {
 
     return (
       <div className="flex flex-nowrap items-center gap-1.5">
+        {(canEdit || showAdmin) && (
+          <Link
+            href={`/dashboard/property/${item._id}/analytics`}
+            title="Property analytics"
+            className={`${actionLinkClass} text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40`}
+          >
+            <AnalyticsIcon />
+            Analytics
+          </Link>
+        )}
         {canEdit && (
           <Link
             href={`/dashboard/property/${item._id}/edit`}

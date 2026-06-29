@@ -120,6 +120,12 @@ export function getEventBadgeClass(event: string) {
   if (event === "auction_viewed") {
     return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300";
   }
+  if (event === "property_card_click") {
+    return "bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300";
+  }
+  if (event === "property_search") {
+    return "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300";
+  }
   if (event === "login" || event === "signup_completed") {
     return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300";
   }
@@ -160,6 +166,19 @@ export function describeTimelineItem(item: ActivityTimelineItem) {
 
   if (item.event === "property_created") {
     return `Created property ${item.properties.propertyId || ""}`.trim();
+  }
+
+  if (item.event === "property_card_click") {
+    return `Clicked property card ${item.properties.propertyId || ""} from ${item.properties.source || "listing"}`;
+  }
+
+  if (item.event === "property_search") {
+    const parts = [
+      item.properties.query ? `"${item.properties.query}"` : "",
+      item.properties.category ? `category: ${item.properties.category}` : "",
+      item.properties.city ? `city: ${item.properties.city}` : "",
+    ].filter(Boolean);
+    return `Searched properties ${parts.join(", ") || ""}`.trim();
   }
 
   return getEventLabel(item.event);

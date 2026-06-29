@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Auction } from "@/components/auction-card/types";
+import { trackPropertyCardClick } from "@/lib/analytics";
 
 function useCountdown(endsAt: string) {
   const [timeLeft, setTimeLeft] = useState("");
@@ -47,10 +48,20 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   const hasEnded = timeLeft === "Ended";
   const href = propertyHref(auction.id);
 
+  function handleCardClick(source: "image" | "title" | "button") {
+    trackPropertyCardClick(auction.id, {
+      source,
+      category: auction.category,
+      city: auction.location,
+      title: auction.title,
+    });
+  }
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
       <Link
         href={href}
+        onClick={() => handleCardClick("image")}
         className="relative aspect-[4/3] shrink-0 overflow-hidden bg-zinc-100 dark:bg-zinc-900"
       >
         {!imageError ? (
@@ -98,7 +109,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
 
       <div className="flex flex-1 flex-col p-4">
         <div className="min-h-[3.75rem]">
-          <Link href={href} className="group block">
+          <Link href={href} onClick={() => handleCardClick("title")} className="group block">
             <h3 className="line-clamp-2 min-h-[2.75rem] text-base leading-snug font-semibold text-zinc-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
               {auction.title}
             </h3>
@@ -140,6 +151,8 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           </div>
           <Link
             href={href}
+            onClick={() => handleCardClick("button")}
+            data-analytics-id="view-property"
             className="flex h-10 w-full items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-900"
           >
             View Property

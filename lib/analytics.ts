@@ -11,6 +11,8 @@ export const ANALYTICS_EVENTS = [
   "property_created",
   "logout",
   "click",
+  "property_card_click",
+  "property_search",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
@@ -128,6 +130,31 @@ export function track(
 
 export function trackPageView(path: string) {
   track("page_view", { path }, path);
+}
+
+export function trackPropertySearch(
+  properties: {
+    query?: string;
+    category?: string;
+    city?: string;
+    buildingType?: string;
+    source: string;
+    resultCount?: number;
+  },
+  path?: string,
+) {
+  track("property_search", properties, path);
+}
+
+export function trackPropertyCardClick(
+  propertyId: string,
+  properties?: AnalyticsProperties,
+) {
+  track(
+    "property_card_click",
+    { propertyId, ...properties },
+    `/auctions/${propertyId}`,
+  );
 }
 
 export type ClickTrackProperties = {

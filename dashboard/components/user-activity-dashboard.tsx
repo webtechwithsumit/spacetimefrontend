@@ -37,6 +37,8 @@ const EVENT_FILTERS = [
   "signup_completed",
   "logout",
   "property_created",
+  "property_card_click",
+  "property_search",
 ] as const;
 
 function StatPill({ label, value }: { label: string; value: number }) {
