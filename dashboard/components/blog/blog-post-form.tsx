@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
 import { RichTextEditor } from "@/dashboard/components/blog/rich-text-editor";
@@ -40,6 +40,19 @@ export function BlogPostForm({ postId }: BlogPostFormProps) {
   const [saving, setSaving] = useState(false);
 
   const isAdmin = user?.role === "Admin" || user?.role === "Super-Admin";
+
+  const filePreviewUrl = useMemo(
+    () => (featuredImageFile ? URL.createObjectURL(featuredImageFile) : ""),
+    [featuredImageFile],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) URL.revokeObjectURL(filePreviewUrl);
+    };
+  }, [filePreviewUrl]);
+
+  const previewSrc = filePreviewUrl || (featuredImage ? getMediaUrl(featuredImage) : "");
 
   useEffect(() => {
     if (!postId) return;
@@ -222,11 +235,11 @@ export function BlogPostForm({ postId }: BlogPostFormProps) {
               }}
               className="w-full text-sm"
             />
-            {featuredImage ? (
-              <div className="relative mt-3 aspect-video overflow-hidden rounded-lg">
+            {previewSrc ? (
+              <div className="relative mt-3 aspect-video overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-900">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={getMediaUrl(featuredImage)}
+                  src={previewSrc}
                   alt="Featured"
                   className="h-full w-full object-cover"
                 />
