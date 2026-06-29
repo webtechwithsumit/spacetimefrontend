@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAnalyticsPlugin } from "@/components/analytics-plugin-provider";
 import { useAuth } from "@/components/auth-provider";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useToast } from "@/components/toast-provider";
@@ -126,6 +127,7 @@ export function PropertyList() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status")?.trim() ?? "";
   const { user, isAuthenticated } = useAuth();
+  const { canViewPropertyAnalytics } = useAnalyticsPlugin();
   const toast = useToast();
   const canManage = PROPERTY_MANAGER_ROLES.includes(user?.role ?? "");
 
@@ -280,7 +282,7 @@ export function PropertyList() {
 
     return (
       <div className="flex flex-nowrap items-center gap-1.5">
-        {(canEdit || showAdmin) && (
+        {(canEdit || showAdmin) && (showAdmin || canViewPropertyAnalytics) && (
           <Link
             href={`/dashboard/property/${item._id}/analytics`}
             title="Property analytics"

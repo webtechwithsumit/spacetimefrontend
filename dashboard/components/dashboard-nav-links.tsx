@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useAnalyticsPlugin } from "@/components/analytics-plugin-provider";
 import { useAuth } from "@/components/auth-provider";
 import {
   dashboardNavItems,
@@ -86,10 +87,12 @@ function NavBadge({ badge }: { badge?: string }) {
 export function DashboardNavLinks({ onNavigate }: DashboardNavLinksProps) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const visibleItems = useMemo(
-    () => filterNavItems(dashboardNavItems, user?.role),
-    [user?.role],
-  );
+  const { canViewPlatformAnalytics } = useAnalyticsPlugin();
+  const visibleItems = useMemo(() => {
+    const filtered = filterNavItems(dashboardNavItems, user?.role);
+    if (canViewPlatformAnalytics) return filtered;
+    return filtered.filter((item) => item.id !== "analytics");
+  }, [user?.role, canViewPlatformAnalytics]);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 

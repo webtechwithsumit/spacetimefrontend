@@ -28,6 +28,7 @@ const FLUSH_INTERVAL_MS = 2500;
 const CLICK_DEDUPE_MS = 400;
 
 let initialized = false;
+let trackingEnabled = false;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 const eventQueue: Array<{
   event: AnalyticsEventName;
@@ -55,6 +56,15 @@ function getSessionId(): string {
 export function initAnalytics() {
   if (typeof window === "undefined" || initialized) return;
   initialized = true;
+}
+
+export function setAnalyticsTrackingEnabled(enabled: boolean) {
+  trackingEnabled = enabled;
+  if (!enabled && flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+    eventQueue.length = 0;
+  }
 }
 
 function scheduleFlush() {
@@ -97,7 +107,7 @@ function queueEvent(
   path?: string,
   immediate = false,
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !trackingEnabled) return;
 
   eventQueue.push({ event, properties, path });
 
@@ -168,7 +178,7 @@ export type ClickTrackProperties = {
 };
 
 export function trackClick(properties: ClickTrackProperties) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !trackingEnabled) return;
 
   const signature = [
     properties.path,
@@ -205,7 +215,7 @@ export function resetAnalyticsUser() {
 }
 
 export function setupGlobalClickTracking() {
-  if (typeof window === "undefined") return () => {};
+  if (typeof window === "undefined" || !trackingEnabled) return () => {};
 
   const handleClick = (event: MouseEvent) => {
     const target = event.target;

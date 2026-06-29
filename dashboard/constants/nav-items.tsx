@@ -121,6 +121,22 @@ export const dashboardNavItems: DashboardNavItem[] = [
         icon: <UsersIcon />,
         roles: ["Super-Admin"],
       },
+      {
+        id: "system-master-analytics-subscriptions",
+        label: "Seller Analytics",
+        href: "/dashboard/system-master/analytics-subscriptions",
+        icon: <AnalyticsIcon />,
+        roles: ["Super-Admin"],
+        description: "Enable paid property analytics for sellers and brokers",
+      },
+      {
+        id: "system-master-analytics-license",
+        label: "Analytics License",
+        href: "/dashboard/system-master/analytics-license",
+        icon: <AnalyticsIcon />,
+        roles: ["Super-Admin"],
+        description: "Activate paid analytics plugin license",
+      },
     ],
   },
 ];

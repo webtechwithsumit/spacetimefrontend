@@ -1,3 +1,4 @@
+import { AnalyticsLicenseGate } from "@/dashboard/components/analytics-license-gate";
 import { PropertyAnalyticsDashboard } from "@/dashboard/components/property/property-analytics-dashboard";
 
 type PropertyAnalyticsPageProps = {
@@ -8,5 +9,9 @@ export default async function PropertyAnalyticsPage({
   params,
 }: PropertyAnalyticsPageProps) {
   const { id } = await params;
-  return <PropertyAnalyticsDashboard propertyId={id} />;
+  return (
+    <AnalyticsLicenseGate title="Property Analytics" mode="property">
+      <PropertyAnalyticsDashboard propertyId={id} />
+    </AnalyticsLicenseGate>
+  );
 }
