@@ -72,6 +72,14 @@ export const dashboardNavItems: DashboardNavItem[] = [
     description: "Create and publish site articles",
   },
   {
+    id: "community",
+    label: "Community",
+    href: "/dashboard/community",
+    icon: <UsersIcon />,
+    roles: ["Admin", "Super-Admin"],
+    description: "Moderate community discussions",
+  },
+  {
     id: "auctions",
     label: "Live Auctions",
     href: "/dashboard/auctions",
