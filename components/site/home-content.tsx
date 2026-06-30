@@ -42,7 +42,7 @@ export function HomeHeroSearch() {
           backgroundImage: "url('/images/home.png')",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-indigo-950/65" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/45 via-slate-900/50 to-indigo-950/35" />
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-32">
         <div className="max-w-3xl">
@@ -119,25 +119,83 @@ export function HomeHeroSearch() {
   );
 }
 
-export function HomeStatsBar() {
-  const stats = [
-    { label: "Live auctions", value: "Real-time" },
-    { label: "Property types", value: "5+" },
-    { label: "Coverage", value: "Pan-India" },
-    { label: "Platform", value: "Verified listings" },
-  ];
+const STATS = [
+  {
+    label: "Live auctions",
+    value: "Real-time",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+      </svg>
+    ),
+    live: true,
+  },
+  {
+    label: "Property types",
+    value: "5+",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
+      </svg>
+    ),
+  },
+  {
+    label: "Coverage",
+    value: "Pan-India",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Platform",
+    value: "Verified listings",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5">
+        <path d="M9 12l2 2 4-4" />
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+      </svg>
+    ),
+  },
+] as const;
 
+export function HomeStatsBar() {
   return (
     <section className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-6 py-8 sm:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="text-center sm:text-left">
-            <p className="text-lg font-semibold text-zinc-900 dark:text-white">
-              {stat.value}
-            </p>
-            <p className="mt-1 text-sm text-zinc-500">{stat.label}</p>
-          </div>
-        ))}
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5">
+          {STATS.map((stat) => (
+            <div
+              key={stat.label}
+              className="group rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 transition-colors hover:border-zinc-300 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:bg-zinc-900"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                  {stat.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5">
+                    <span className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white sm:text-lg">
+                      {stat.value}
+                    </span>
+                    {"live" in stat && stat.live ? (
+                      <span className="relative flex size-2">
+                        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 text-xs font-medium text-zinc-500 sm:text-sm">
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
