@@ -42,16 +42,13 @@ export function AnalyticsLicenseGate({
           {title} is not active
         </h1>
         <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-          SpaceTime Analytics plugin is not enabled on this server.
+          SpaceTime Analytics is not enabled on this server. Set{" "}
+          <code className="text-xs">ANALYTICS_ENABLED=true</code> in the backend
+          environment.
         </p>
-        <ul className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-          <li>
-            Plugin enabled: <strong>{status?.enabled ? "Yes" : "No"}</strong>
-          </li>
-          <li>
-            License active: <strong>{status?.licensed ? "Yes" : "No"}</strong>
-          </li>
-        </ul>
+        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+          Analytics enabled: <strong>{status?.enabled ? "Yes" : "No"}</strong>
+        </p>
       </div>
     );
   }

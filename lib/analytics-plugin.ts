@@ -3,14 +3,8 @@ import { api } from "@/lib/api";
 export type AnalyticsPluginStatus = {
   plugin: string;
   enabled: boolean;
-  licensed: boolean;
   active: boolean;
-  organizationName: string | null;
-  organizationId: string | null;
-  plan: string | null;
   features: string[];
-  expiresAt: string | null;
-  maxEventsPerMonth: number | null;
 };
 
 export type AnalyticsUserSubscription = {
@@ -50,14 +44,8 @@ let cacheExpiresAt = 0;
 const defaultStatus = (): AnalyticsPluginStatus => ({
   plugin: "spacetime-analytics",
   enabled: false,
-  licensed: false,
   active: false,
-  organizationName: null,
-  organizationId: null,
-  plan: null,
   features: [],
-  expiresAt: null,
-  maxEventsPerMonth: null,
 });
 
 const defaultAccess = (): AnalyticsUserAccess => ({

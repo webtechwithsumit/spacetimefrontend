@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AuctionCard } from "@/components/auction-card/auction-card";
 import type { Auction } from "@/components/auction-card/types";
 import { Pagination } from "@/components/pagination";
@@ -27,7 +28,34 @@ type LiveAuctionsListProps = {
   showSearch?: boolean;
 };
 
-export function LiveAuctionsList({
+export function LiveAuctionsList(props: LiveAuctionsListProps) {
+  const {
+    gridClassName = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+    skeletonCount = ITEMS_PER_PAGE,
+    limit = ITEMS_PER_PAGE,
+  } = props;
+
+  return (
+    <Suspense
+      fallback={
+        <div className={`grid gap-6 ${gridClassName}`}>
+          {Array.from({ length: Math.min(skeletonCount, limit) }).map(
+            (_, index) => (
+              <div
+                key={index}
+                className="h-96 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
+              />
+            ),
+          )}
+        </div>
+      }
+    >
+      <LiveAuctionsListInner {...props} />
+    </Suspense>
+  );
+}
+
+function LiveAuctionsListInner({
   gridClassName = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   skeletonCount = ITEMS_PER_PAGE,
   limit = ITEMS_PER_PAGE,
@@ -35,16 +63,25 @@ export function LiveAuctionsList({
   showPagination = true,
   showSearch = true,
 }: LiveAuctionsListProps) {
+  const searchParams = useSearchParams();
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [pagination, setPagination] =
     useState<PaginationMeta>(DEFAULT_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get("search") ?? "",
+  );
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    () => searchParams.get("search")?.trim() ?? "",
+  );
+  const [categoryFilter, setCategoryFilter] = useState(
+    () => searchParams.get("category") ?? "",
+  );
+  const [cityFilter, setCityFilter] = useState(
+    () => searchParams.get("city") ?? "",
+  );
   const lastTrackedSearch = useRef("");
 
   useEffect(() => {
