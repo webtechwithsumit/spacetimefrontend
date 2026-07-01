@@ -18,7 +18,7 @@ export function Header() {
   const { isAuthenticated, isReady } = useAuth();
 
   return (
-    <header className="relative border-b border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-black">
+    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-zinc-800/60 dark:bg-black/95 dark:supports-[backdrop-filter]:bg-black/80">
       <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-6 lg:grid-cols-[1fr_auto_1fr]">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="flex size-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white dark:bg-white dark:text-black">

@@ -80,6 +80,14 @@ export const dashboardNavItems: DashboardNavItem[] = [
     description: "Moderate community discussions",
   },
   {
+    id: "support",
+    label: "Support",
+    href: "/dashboard/support",
+    icon: <UsersIcon />,
+    roles: ["Admin", "Super-Admin"],
+    description: "Manage user support tickets",
+  },
+  {
     id: "auctions",
     label: "Live Auctions",
     href: "/dashboard/auctions",
