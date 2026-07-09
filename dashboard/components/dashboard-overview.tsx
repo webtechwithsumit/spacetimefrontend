@@ -50,18 +50,105 @@ function ChevronIcon() {
   );
 }
 
+type KpiTone = "violet" | "blue" | "indigo" | "emerald";
+
+const kpiCardStyles: Record<KpiTone, string> = {
+  violet:
+    "border-violet-200/90 bg-violet-50/90 hover:bg-violet-100/90 dark:border-violet-900/50 dark:bg-violet-950/30 dark:hover:bg-violet-950/45",
+  blue: "border-sky-200/90 bg-sky-50/90 hover:bg-sky-100/90 dark:border-sky-900/50 dark:bg-sky-950/30 dark:hover:bg-sky-950/45",
+  indigo:
+    "border-indigo-200/90 bg-indigo-50/90 hover:bg-indigo-100/90 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/45",
+  emerald:
+    "border-emerald-200/90 bg-emerald-50/90 hover:bg-emerald-100/90 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/45",
+};
+
+const kpiLabelStyles: Record<KpiTone, string> = {
+  violet: "text-violet-700 dark:text-violet-300",
+  blue: "text-sky-700 dark:text-sky-300",
+  indigo: "text-indigo-700 dark:text-indigo-300",
+  emerald: "text-emerald-700 dark:text-emerald-300",
+};
+
+type PanelTheme =
+  | "default"
+  | "attention"
+  | "bidding"
+  | "activity"
+  | "listings"
+  | "closed";
+
+const panelThemes: Record<
+  PanelTheme,
+  { section: string; header: string; title: string; action: string }
+> = {
+  default: {
+    section: "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950",
+    header:
+      "border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-900/50",
+    title: "text-zinc-900 dark:text-white",
+    action:
+      "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white",
+  },
+  attention: {
+    section:
+      "border-amber-200/90 bg-white dark:border-amber-900/40 dark:bg-zinc-950",
+    header:
+      "border-amber-100 bg-amber-50/90 dark:border-amber-900/30 dark:bg-amber-950/25",
+    title: "text-amber-950 dark:text-amber-100",
+    action: "text-amber-700 hover:text-amber-900 dark:text-amber-400",
+  },
+  bidding: {
+    section:
+      "border-emerald-200/90 bg-white dark:border-emerald-900/40 dark:bg-zinc-950",
+    header:
+      "border-emerald-100 bg-emerald-50/90 dark:border-emerald-900/30 dark:bg-emerald-950/25",
+    title: "text-emerald-950 dark:text-emerald-100",
+    action: "text-emerald-700 hover:text-emerald-900 dark:text-emerald-400",
+  },
+  activity: {
+    section:
+      "border-sky-200/90 bg-white dark:border-sky-900/40 dark:bg-zinc-950",
+    header:
+      "border-sky-100 bg-sky-50/90 dark:border-sky-900/30 dark:bg-sky-950/25",
+    title: "text-sky-950 dark:text-sky-100",
+    action: "text-sky-700 hover:text-sky-900 dark:text-sky-400",
+  },
+  listings: {
+    section:
+      "border-violet-200/90 bg-white dark:border-violet-900/40 dark:bg-zinc-950",
+    header:
+      "border-violet-100 bg-violet-50/90 dark:border-violet-900/30 dark:bg-violet-950/25",
+    title: "text-violet-950 dark:text-violet-100",
+    action: "text-violet-700 hover:text-violet-900 dark:text-violet-400",
+  },
+  closed: {
+    section:
+      "border-zinc-300/80 bg-white dark:border-zinc-700 dark:bg-zinc-950",
+    header:
+      "border-zinc-200 bg-zinc-100/90 dark:border-zinc-800 dark:bg-zinc-900/60",
+    title: "text-zinc-900 dark:text-zinc-100",
+    action: "text-zinc-700 hover:text-zinc-900 dark:text-zinc-300",
+  },
+};
+
 function HeroKpi({
   label,
   value,
   href,
+  tone = "indigo",
 }: {
   label: string;
   value: number | string;
   href?: string;
+  tone?: KpiTone;
 }) {
   const content = (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4 transition-colors hover:bg-zinc-100 dark:border-zinc-700/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/60">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+    <div
+      className={`rounded-xl border px-5 py-4 transition-colors ${kpiCardStyles[tone]}`}
+    >
+      <p
+        className={`text-xs font-medium uppercase tracking-wide ${kpiLabelStyles[tone]}`}
+      >
         {label}
       </p>
       <p className="mt-1 text-3xl font-bold tabular-nums text-zinc-900 dark:text-white">
@@ -83,28 +170,38 @@ function HeroKpi({
 
 function Panel({
   title,
+  subtitle,
   action,
   children,
   className = "",
+  theme = "default",
 }: {
   title: string;
+  subtitle?: string;
   action?: { label: string; href: string };
   children: React.ReactNode;
   className?: string;
+  theme?: PanelTheme;
 }) {
+  const styles = panelThemes[theme];
+
   return (
     <section
-      className={`overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 ${className}`}
+      className={`overflow-hidden rounded-xl border ${styles.section} ${className}`}
     >
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
-          {title}
-        </h2>
+      <div
+        className={`flex items-center justify-between border-b px-4 py-3 ${styles.header}`}
+      >
+        <div>
+          <h2 className={`text-sm font-semibold ${styles.title}`}>{title}</h2>
+          {subtitle ? (
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
         {action ? (
-          <Link
-            href={action.href}
-            className="text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-          >
+          <Link href={action.href} className={`text-xs font-medium ${styles.action}`}>
             {action.label}
           </Link>
         ) : null}
@@ -130,9 +227,27 @@ function EyeIcon() {
   );
 }
 
-function MetricBadge({ value }: { value: number }) {
+function MetricBadge({
+  value,
+  variant = "neutral",
+}: {
+  value: number;
+  variant?: "listings" | "bids" | "leading" | "neutral";
+}) {
+  const styles = {
+    listings:
+      "border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-200",
+    bids: "border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-200",
+    leading:
+      "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200",
+    neutral:
+      "border-zinc-200 bg-zinc-100 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white",
+  };
+
   return (
-    <span className="inline-flex min-w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 px-2 py-1 text-xs font-bold tabular-nums text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+    <span
+      className={`inline-flex min-w-8 items-center justify-center rounded-lg border px-2 py-1 text-xs font-bold tabular-nums ${styles[variant]}`}
+    >
       {value}
     </span>
   );
@@ -174,12 +289,25 @@ function RoleBreakdownCard({
   const hiddenCount = rows.length - ROLE_BREAKDOWN_VISIBLE_ROWS;
 
   const viewButtonClassName =
-    "inline-flex size-8 items-center justify-center rounded-lg border border-zinc-300 text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-900";
+    variant === "listings"
+      ? "inline-flex size-8 items-center justify-center rounded-lg border border-violet-300 text-violet-700 transition-colors hover:bg-violet-50 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-950/40"
+      : "inline-flex size-8 items-center justify-center rounded-lg border border-sky-300 text-sky-700 transition-colors hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-950/40";
+
+  const cardTheme =
+    variant === "listings"
+      ? "border-violet-200/80 bg-white dark:border-violet-900/40 dark:bg-zinc-950"
+      : "border-sky-200/80 bg-white dark:border-sky-900/40 dark:bg-zinc-950";
+  const headerTheme =
+    variant === "listings"
+      ? "border-violet-100 bg-violet-50/60 dark:border-violet-900/30 dark:bg-violet-950/20"
+      : "border-sky-100 bg-sky-50/60 dark:border-sky-900/30 dark:bg-sky-950/20";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-        <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+    <div className={`overflow-hidden rounded-xl border ${cardTheme}`}>
+      <div className={`border-b px-4 py-3 ${headerTheme}`}>
+        <h3
+          className={`text-sm font-semibold ${variant === "listings" ? "text-violet-950 dark:text-violet-100" : "text-sky-950 dark:text-sky-100"}`}
+        >
           {title}
         </h3>
         <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>
@@ -229,18 +357,18 @@ function RoleBreakdownCard({
                     </td>
                     {variant === "listings" ? (
                       <td className="px-4 py-3 text-center">
-                        <MetricBadge value={row.count} />
+                        <MetricBadge value={row.count} variant="listings" />
                       </td>
                     ) : (
                       <>
                         <td className="px-4 py-3 text-center">
-                          <MetricBadge value={row.count} />
+                          <MetricBadge value={row.count} variant="bids" />
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <MetricBadge value={row.totalBids ?? 0} />
+                          <MetricBadge value={row.totalBids ?? 0} variant="neutral" />
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <MetricBadge value={row.leadingCount ?? 0} />
+                          <MetricBadge value={row.leadingCount ?? 0} variant="leading" />
                         </td>
                       </>
                     )}
@@ -353,8 +481,8 @@ function NeedsAttentionPanel({
 
   if (!items.length && !summaryItems.length) {
     return (
-      <Panel title="Needs attention">
-        <p className="px-4 py-5 text-sm text-zinc-500 dark:text-zinc-400">
+      <Panel title="Needs attention" theme="attention">
+        <p className="px-4 py-5 text-sm text-emerald-700 dark:text-emerald-400">
           All clear — no urgent items right now.
         </p>
       </Panel>
@@ -363,12 +491,12 @@ function NeedsAttentionPanel({
 
   const toneClass = {
     amber:
-      "border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200",
-    red: "border-zinc-400 bg-zinc-200 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100",
+      "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200",
+    red: "border-red-200 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200",
   };
 
   return (
-    <Panel title="Needs attention">
+    <Panel title="Needs attention" subtitle="Items that need your action" theme="attention">
       <div className="space-y-3 px-4 py-4">
         {summaryItems.length ? (
           <div className="flex flex-wrap gap-2">
@@ -376,7 +504,7 @@ function NeedsAttentionPanel({
               <Link
                 key={item.key}
                 href={item.href}
-                className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-200 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-950/60"
               >
                 {item.label} →
               </Link>
@@ -423,21 +551,21 @@ function activityDaysLabel(days: number) {
 function statusBadge(status: string) {
   if (status === "Live") {
     return (
-      <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[11px] font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
+      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white dark:bg-emerald-500">
         Live
       </span>
     );
   }
   if (status === "Draft") {
     return (
-      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
         Draft
       </span>
     );
   }
   if (status === "Ended") {
     return (
-      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+      <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
         Ended
       </span>
     );
@@ -469,14 +597,55 @@ function ActivityFilter({
           key={option.days}
           type="button"
           onClick={() => onChange(option.days)}
-          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${value === option.days
-              ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${            value === option.days
+              ? "bg-indigo-600 text-white dark:bg-indigo-500"
               : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
             }`}
         >
           {option.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function SectionGroup({
+  title,
+  description,
+  theme,
+  children,
+}: {
+  title: string;
+  description: string;
+  theme: "listings" | "bids";
+  children: React.ReactNode;
+}) {
+  const isListings = theme === "listings";
+
+  return (
+    <div
+      className={
+        isListings
+          ? "rounded-2xl border border-violet-200/90 bg-gradient-to-br from-violet-50/70 via-white to-white p-4 sm:p-5 dark:border-violet-900/40 dark:from-violet-950/20 dark:via-zinc-950 dark:to-zinc-950"
+          : "rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-50/70 via-white to-white p-4 sm:p-5 dark:border-sky-900/40 dark:from-sky-950/20 dark:via-zinc-950 dark:to-zinc-950"
+      }
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <span
+          className={`mt-1.5 size-2.5 shrink-0 rounded-full ${isListings ? "bg-violet-500" : "bg-sky-500"}`}
+        />
+        <div>
+          <h3
+            className={`text-sm font-semibold ${isListings ? "text-violet-950 dark:text-violet-100" : "text-sky-950 dark:text-sky-100"}`}
+          >
+            {title}
+          </h3>
+          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+            {description}
+          </p>
+        </div>
+      </div>
+      {children}
     </div>
   );
 }
@@ -495,10 +664,12 @@ function AdminDashboardView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 via-white to-violet-50/40 p-5 shadow-sm sm:p-6 dark:border-indigo-900/40 dark:from-indigo-950/30 dark:via-zinc-950 dark:to-violet-950/20">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Platform pulse</p>
+            <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+              Platform pulse
+            </p>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
               Here&apos;s what&apos;s happening right now
             </h2>
@@ -513,21 +684,25 @@ function AdminDashboardView({
             label="Total Properties"
             value={platform.totalProperties}
             href="/dashboard/property"
+            tone="violet"
           />
           <HeroKpi
             label="Total Bids"
             value={platform.totalBids}
             href="/dashboard/bid-monitor"
+            tone="blue"
           />
           <HeroKpi
             label="Users"
             value={platform.totalUsers}
             href="/dashboard/system-master/users"
+            tone="indigo"
           />
           <HeroKpi
             label="Live Auctions"
             value={platform.liveAuctions}
             href="/dashboard/auctions"
+            tone="emerald"
           />
         </div>
         <p className="mt-3 text-xs text-zinc-500">
@@ -541,7 +716,9 @@ function AdminDashboardView({
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel
           title="Properties in bidding"
+          subtitle="Live auctions with active bids"
           action={{ label: "Bid monitor", href: "/dashboard/bid-monitor" }}
+          theme="bidding"
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -564,20 +741,20 @@ function AdminDashboardView({
                   insights.propertiesInBidding.map((item) => (
                     <tr key={item.propertyId} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
                       <td className="px-4 py-3">
-                        <Link href={`/auctions/${item.propertyId}`} className="font-medium text-zinc-900 hover:text-zinc-600 dark:text-white dark:hover:text-zinc-300">
+                        <Link href={`/auctions/${item.propertyId}`} className="font-medium text-zinc-900 hover:text-emerald-700 dark:text-white dark:hover:text-emerald-300">
                           {item.title}
                         </Link>
                         <p className="mt-0.5 text-xs text-zinc-500">
                           {[item.microMarketLocality, item.city].filter(Boolean).join(", ") || "—"}
                         </p>
                         {item.leadingBidderName ? (
-                          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                          <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
                             Leading: {item.leadingBidderName}
                           </p>
                         ) : null}
                       </td>
                       <td className="px-4 py-3 tabular-nums font-semibold">{item.totalBids}</td>
-                      <td className="px-4 py-3 tabular-nums font-semibold text-zinc-900 dark:text-white">
+                      <td className="px-4 py-3 tabular-nums font-semibold text-emerald-700 dark:text-emerald-300">
                         {formatBidAmount(item.currentBidAmount)}
                       </td>
                       <td className="px-4 py-3 text-xs text-zinc-500">
@@ -591,24 +768,20 @@ function AdminDashboardView({
           </div>
         </Panel>
 
-        <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="border-b border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
-              Recent activity
-            </h2>
-            <p className="text-xs text-zinc-500">
-              {insights.periodBidCount} bids · {activityDaysLabel(activityDays).toLowerCase()}
-            </p>
-          </div>
+        <Panel
+          title="Recent activity"
+          subtitle={`${insights.periodBidCount} bids · ${activityDaysLabel(activityDays).toLowerCase()}`}
+          theme="activity"
+        >
           {insights.recentActivity.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-zinc-400">
               No bids in this period
             </p>
           ) : (
-            <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <ul className="divide-y divide-sky-100 dark:divide-sky-900/30">
               {insights.recentActivity.map((item) => (
                 <li key={item.id} className="flex gap-3 px-4 py-3">
-                  <div className="mt-1 size-2 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                  <div className="mt-1 size-2 shrink-0 rounded-full bg-sky-400 dark:bg-sky-500" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-zinc-800 dark:text-zinc-200">
                       <span className="font-semibold">{item.userName}</span>
@@ -616,7 +789,7 @@ function AdminDashboardView({
                         <span className="ml-1 text-xs text-zinc-400">({item.userRole})</span>
                       ) : null}{" "}
                       bid {formatBidAmount(item.amount)} on{" "}
-                      <Link href={`/auctions/${item.propertyId}`} className="font-medium text-zinc-900 hover:text-zinc-600 dark:text-white dark:hover:text-zinc-300">
+                      <Link href={`/auctions/${item.propertyId}`} className="font-medium text-sky-800 hover:text-sky-600 dark:text-sky-200 dark:hover:text-sky-300">
                         {item.propertyTitle}
                       </Link>
                     </p>
@@ -629,11 +802,16 @@ function AdminDashboardView({
               ))}
             </ul>
           )}
-        </section>
+        </Panel>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Latest listings" action={{ label: "All properties", href: "/dashboard/property" }}>
+        <Panel
+          title="Latest listings"
+          subtitle="Recently added properties"
+          action={{ label: "All properties", href: "/dashboard/property" }}
+          theme="listings"
+        >
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -654,7 +832,7 @@ function AdminDashboardView({
                   insights.latestListings.map((item) => (
                     <tr key={item.id} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
                       <td className="px-4 py-3">
-                        <Link href={`/dashboard/property/${item.id}/edit`} className="font-medium text-zinc-900 hover:text-zinc-600 dark:text-white dark:hover:text-zinc-300">
+                        <Link href={`/dashboard/property/${item.id}/edit`} className="font-medium text-violet-900 hover:text-violet-700 dark:text-violet-200 dark:hover:text-violet-300">
                           {item.title}
                         </Link>
                       </td>
@@ -668,7 +846,12 @@ function AdminDashboardView({
           </div>
         </Panel>
 
-        <Panel title="Closed auctions" action={{ label: "View ended", href: "/dashboard/bid-monitor" }}>
+        <Panel
+          title="Closed auctions"
+          subtitle="Recently ended auctions"
+          action={{ label: "View ended", href: "/dashboard/bid-monitor" }}
+          theme="closed"
+        >
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -724,7 +907,7 @@ function AdminDashboardView({
                         </div>
                       </td>
                       <td className="px-4 py-3 tabular-nums font-semibold">{item.totalBids}</td>
-                      <td className="px-4 py-3 tabular-nums font-semibold text-zinc-900 dark:text-white">
+                      <td className="px-4 py-3 tabular-nums font-semibold text-zinc-600 dark:text-zinc-300">
                         {formatBidAmount(item.winningBid)}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -746,14 +929,17 @@ function AdminDashboardView({
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
-          Role breakdown
-        </h2>
-
         <div>
-          <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Listings
-          </h3>
+          <h2 className="mb-4 text-base font-semibold text-zinc-900 dark:text-white">
+            Role breakdown
+          </h2>
+        </div>
+
+        <SectionGroup
+          title="Listings"
+          description="Who listed how many properties on the platform"
+          theme="listings"
+        >
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <RoleBreakdownCard
               title="Admin — Listings"
@@ -776,38 +962,38 @@ function AdminDashboardView({
               rows={insights.roleBreakdown.sellerListings}
               seeMoreHref="/dashboard/property"
             />
-
           </div>
-        </div>
+        </SectionGroup>
 
-        <div>
-          <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Bids
-          </h3>
+        <SectionGroup
+          title="Bids"
+          description="Who bid on how many properties and where they are leading"
+          theme="bids"
+        >
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <RoleBreakdownCard
-            title="Buyers — Bids"
-            subtitle="Properties bid on and total bid activity"
+              title="Buyers — Bids"
+              subtitle="Properties bid on and total bid activity"
               variant="bids"
               rows={insights.roleBreakdown.buyerBids}
               seeMoreHref="/dashboard/bid-monitor"
             />
             <RoleBreakdownCard
-            title="Brokers — Bids"
-            subtitle="Properties bid on and total bid activity"
+              title="Brokers — Bids"
+              subtitle="Properties bid on and total bid activity"
               variant="bids"
               rows={insights.roleBreakdown.brokerBids}
               seeMoreHref="/dashboard/bid-monitor"
             />
             <RoleBreakdownCard
-            title="Sellers — Bids"
-            subtitle="Properties bid on and total bid activity"
+              title="Sellers — Bids"
+              subtitle="Properties bid on and total bid activity"
               variant="bids"
               rows={insights.roleBreakdown.sellerBids}
               seeMoreHref="/dashboard/bid-monitor"
             />
           </div>
-        </div>
+        </SectionGroup>
       </div>
     </div>
   );
