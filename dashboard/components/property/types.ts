@@ -73,6 +73,8 @@ export type DashboardProperty = {
   assignedAuctionAdvisorId?: string;
   sellerId?: PropertySeller | string;
   createdAt?: string;
+  bidderBidCount?: number;
+  bidderHighestBid?: number | null;
 };
 
 export type BrokerOption = {

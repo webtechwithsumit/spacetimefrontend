@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAnalyticsPlugin } from "@/components/analytics-plugin-provider";
 import { useAuth } from "@/components/auth-provider";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -26,6 +26,7 @@ import {
   UPCOMING_AUCTION_DAYS,
 } from "@/lib/auction-stage";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { formatBidAmount } from "@/lib/live-auctions";
 import { trackPropertySearch } from "@/lib/analytics";
 import {
   buildPaginationParams,
@@ -46,6 +47,23 @@ const STAGE_FILTER_VALUES = new Set(["Live", "Upcoming", "Ended"]);
 
 const actionLinkClass =
   "inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors";
+
+function buildPropertyListHref(params: {
+  status?: string;
+  sellerId?: string;
+  sellerName?: string;
+  bidderId?: string;
+  bidderName?: string;
+}) {
+  const search = new URLSearchParams();
+  if (params.status) search.set("status", params.status);
+  if (params.sellerId) search.set("sellerId", params.sellerId);
+  if (params.sellerName) search.set("sellerName", params.sellerName);
+  if (params.bidderId) search.set("bidderId", params.bidderId);
+  if (params.bidderName) search.set("bidderName", params.bidderName);
+  const query = search.toString();
+  return query ? `/dashboard/property?${query}` : "/dashboard/property";
+}
 
 function EditIcon() {
   return (
@@ -126,6 +144,16 @@ const INITIAL_COLUMNS: PropertyColumn[] = [
 export function PropertyList() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status")?.trim() ?? "";
+  const sellerIdFilter = searchParams.get("sellerId")?.trim() ?? "";
+  const sellerNameFilter = searchParams.get("sellerName")?.trim() ?? "";
+  const bidderIdFilter = searchParams.get("bidderId")?.trim() ?? "";
+  const bidderNameFilter = searchParams.get("bidderName")?.trim() ?? "";
+  const personFilterParams = {
+    sellerId: sellerIdFilter,
+    sellerName: sellerNameFilter,
+    bidderId: bidderIdFilter,
+    bidderName: bidderNameFilter,
+  };
   const { user, isAuthenticated } = useAuth();
   const { canViewPropertyAnalytics } = useAnalyticsPlugin();
   const toast = useToast();
@@ -147,6 +175,17 @@ export function PropertyList() {
   const [removing, setRemoving] = useState(false);
   const lastTrackedSearch = useRef("");
 
+  const tableColumns = useMemo(() => {
+    if (!bidderIdFilter) return columns;
+
+    const bidderColumns: PropertyColumn[] = [
+      { id: "bidderBidCount", label: "Times bid", visible: true },
+      { id: "bidderHighestBid", label: "Highest bid", visible: true },
+    ];
+
+    return [...columns.filter((column) => column.visible), ...bidderColumns];
+  }, [columns, bidderIdFilter]);
+
   const fetchProperties = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
@@ -162,6 +201,8 @@ export function PropertyList() {
             : statusFilter
               ? { auctionStatus: statusFilter }
               : {}),
+          ...(sellerIdFilter ? { sellerId: sellerIdFilter } : {}),
+          ...(bidderIdFilter ? { bidderId: bidderIdFilter } : {}),
         },
       });
       if (!data.success) {
@@ -173,9 +214,16 @@ export function PropertyList() {
       setProperties(data.data ?? []);
       setPagination(data.pagination ?? DEFAULT_PAGINATION);
 
-      const hasFilters = Boolean(debouncedSearch || statusFilter);
+      const hasFilters = Boolean(
+        debouncedSearch || statusFilter || sellerIdFilter || bidderIdFilter,
+      );
       if (hasFilters) {
-        const signature = JSON.stringify({ debouncedSearch, statusFilter });
+        const signature = JSON.stringify({
+          debouncedSearch,
+          statusFilter,
+          sellerIdFilter,
+          bidderIdFilter,
+        });
         if (signature !== lastTrackedSearch.current) {
           lastTrackedSearch.current = signature;
           trackPropertySearch(
@@ -196,7 +244,14 @@ export function PropertyList() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, currentPage, debouncedSearch, statusFilter]);
+  }, [
+    isAuthenticated,
+    currentPage,
+    debouncedSearch,
+    statusFilter,
+    sellerIdFilter,
+    bidderIdFilter,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -207,7 +262,7 @@ export function PropertyList() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, sellerIdFilter, bidderIdFilter]);
 
   useEffect(() => {
     fetchProperties();
@@ -269,6 +324,22 @@ export function PropertyList() {
       );
     }
     if (col.id === "sellerId") return getSellerName(item.sellerId);
+    if (col.id === "bidderBidCount") {
+      return (
+        <span className="font-semibold tabular-nums text-zinc-900 dark:text-white">
+          {item.bidderBidCount ?? 0}
+        </span>
+      );
+    }
+    if (col.id === "bidderHighestBid") {
+      return item.bidderHighestBid != null ? (
+        <span className="font-semibold tabular-nums text-zinc-900 dark:text-white">
+          {formatBidAmount(item.bidderHighestBid)}
+        </span>
+      ) : (
+        "—"
+      );
+    }
     const value = item[col.id as keyof DashboardProperty];
     if (value === undefined || value === null || value === "") return "—";
     return String(value);
@@ -353,14 +424,54 @@ export function PropertyList() {
       {statusFilter && !STAGE_FILTER_VALUES.has(statusFilter) ? (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-zinc-600 dark:text-zinc-400">Filtered by:</span>
-          <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+          <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             {statusFilter}
           </span>
           <Link
-            href="/dashboard/property"
-            className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            href={buildPropertyListHref(personFilterParams)}
+            className="text-xs font-medium text-zinc-600 hover:underline dark:text-zinc-400"
           >
             Clear filter
+          </Link>
+        </div>
+      ) : null}
+
+      {sellerIdFilter || bidderIdFilter ? (
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-700 dark:bg-zinc-900/80">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="size-4"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Active filter
+              </p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-zinc-900 dark:text-white">
+                {sellerIdFilter
+                  ? `Listings by ${sellerNameFilter || "user"}`
+                  : `Properties bid on by ${bidderNameFilter || "user"}`}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={
+              statusFilter
+                ? buildPropertyListHref({ status: statusFilter })
+                : "/dashboard/property"
+            }
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-800 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            Clear person filter
           </Link>
         </div>
       ) : null}
@@ -368,7 +479,10 @@ export function PropertyList() {
       <div className="mb-4 flex flex-wrap gap-6 border-b border-zinc-200 dark:border-zinc-800">
         {STAGE_TABS.map((tab) => {
           const active = statusFilter === tab.id;
-          const href = tab.id ? `/dashboard/property?status=${tab.id}` : "/dashboard/property";
+          const href = buildPropertyListHref({
+            ...personFilterParams,
+            status: tab.id || undefined,
+          });
 
           return (
             <Link
@@ -432,8 +546,12 @@ export function PropertyList() {
         </div>
       ) : properties.length === 0 ? (
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-8 text-center dark:border-indigo-900/50 dark:bg-indigo-950/30">
-          <h4 className="font-semibold text-indigo-900 dark:text-indigo-200">
-            {statusFilter === "Live"
+          <h4 className="font-semibold text-zinc-900 dark:text-zinc-200">
+            {sellerIdFilter
+              ? `No listings found for ${sellerNameFilter || "this user"}`
+              : bidderIdFilter
+                ? `No properties found for bids by ${bidderNameFilter || "this user"}`
+                : statusFilter === "Live"
               ? "No live properties"
               : statusFilter === "Upcoming"
                 ? "No upcoming properties"
@@ -452,7 +570,7 @@ export function PropertyList() {
       ) : (
         <>
           <DataTable
-            columns={columns}
+            columns={tableColumns}
             data={properties}
             getRowKey={(item) => item._id}
             renderTableCell={renderTableCell}

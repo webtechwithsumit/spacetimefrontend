@@ -21,6 +21,8 @@ export type LiveBidMonitorItem = {
   currentBidAmount: number;
   auctionStartDateTime: string;
   auctionEndDateTime: string;
+  auctionStatus?: string;
+  auctionStage: "live" | "ended" | "other";
   totalBids: number;
   uniqueBidders: number;
   leadingBidder: {

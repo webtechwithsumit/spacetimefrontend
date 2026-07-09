@@ -2,22 +2,30 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/dashboard/components/page-header";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatBidAmount } from "@/lib/live-auctions";
+import {
+  auctionStageClass,
+  auctionStageLabel,
+  type AuctionStage,
+} from "@/lib/auction-stage";
 import type {
   LiveBidMonitorItem,
   LiveBidMonitorResponse,
 } from "@/lib/live-bid-monitor";
 import { getMediaUrl } from "@/lib/media";
 
-type MonitorTab = "live" | "ended";
+type MonitorTab = "live" | "ended" | "all";
 
-const tabs: { id: MonitorTab; label: string }[] = [
+const baseTabs: { id: MonitorTab; label: string }[] = [
   { id: "live", label: "Live Auctions" },
   { id: "ended", label: "Ended Auctions" },
 ];
+
+const allTab = { id: "all" as const, label: "All" };
 
 function formatDate(value: string) {
   if (!value) return "—";
@@ -31,16 +39,12 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function PropertyBidCard({
-  item,
-  variant,
-}: {
-  item: LiveBidMonitorItem;
-  variant: MonitorTab;
-}) {
+function PropertyBidCard({ item }: { item: LiveBidMonitorItem }) {
   const [open, setOpen] = useState(true);
   const location = [item.microMarketLocality, item.city].filter(Boolean).join(", ");
-  const isEnded = variant === "ended";
+  const stage = (item.auctionStage ?? "other") as AuctionStage;
+  const isEnded = stage === "ended";
+  const isLive = stage === "live";
 
   return (
     <article className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -66,20 +70,18 @@ function PropertyBidCard({
               {item.title}
             </h3>
             <span
-              className={
-                isEnded
-                  ? "rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                  : "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-              }
+              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${auctionStageClass(stage)}`}
             >
-              {isEnded ? "Ended" : "Live"}
+              {auctionStageLabel(stage)}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
             {location || "—"} ·{" "}
             {isEnded
               ? `Ended ${formatDate(item.auctionEndDateTime)}`
-              : `Ends ${formatDate(item.auctionEndDateTime)}`}
+              : isLive
+                ? `Ends ${formatDate(item.auctionEndDateTime)}`
+                : `Auction ${formatDate(item.auctionEndDateTime)}`}
           </p>
           <div className="mt-2 flex flex-wrap gap-4 text-xs">
             <span>
@@ -208,7 +210,11 @@ function PropertyBidCard({
 }
 
 export function LiveBidMonitor() {
-  const [tab, setTab] = useState<MonitorTab>("live");
+  const searchParams = useSearchParams();
+  const bidderIdFilter = searchParams.get("bidderId")?.trim() ?? "";
+  const bidderNameFilter = searchParams.get("bidderName")?.trim() ?? "";
+  const tabs = bidderIdFilter ? [allTab, ...baseTabs] : baseTabs;
+  const [tab, setTab] = useState<MonitorTab>(bidderIdFilter ? "all" : "live");
   const [items, setItems] = useState<LiveBidMonitorItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -220,7 +226,12 @@ export function LiveBidMonitor() {
     try {
       const { data } = await api.get<LiveBidMonitorResponse>(
         "/api/bids/live-monitor",
-        { params: { status: activeTab } },
+        {
+          params: {
+            status: activeTab,
+            ...(bidderIdFilter ? { bidderId: bidderIdFilter } : {}),
+          },
+        },
       );
 
       if (!data.success) {
@@ -236,7 +247,13 @@ export function LiveBidMonitor() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [bidderIdFilter]);
+
+  useEffect(() => {
+    if (bidderIdFilter) {
+      setTab("all");
+    }
+  }, [bidderIdFilter]);
 
   useEffect(() => {
     fetchMonitor(tab);
@@ -257,6 +274,40 @@ export function LiveBidMonitor() {
           Refresh
         </button>
       </div>
+
+      {bidderIdFilter ? (
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-700 dark:bg-zinc-900/80">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="size-4"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Active filter
+              </p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-zinc-900 dark:text-white">
+                Bids by {bidderNameFilter || "user"}
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/bid-monitor"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-800 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            Clear person filter
+          </Link>
+        </div>
+      ) : null}
 
       <div className="mb-6 flex gap-6 border-b border-zinc-200 dark:border-zinc-800">
         {tabs.map((item) => (
@@ -293,14 +344,24 @@ export function LiveBidMonitor() {
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
           <h2 className="text-sm font-semibold">
-            {tab === "live"
-              ? "No live auctions right now"
-              : "No ended auctions yet"}
+            {bidderIdFilter
+              ? tab === "all"
+                ? `No auctions found for bids by ${bidderNameFilter || "this user"}`
+                : `No ${tab} auctions found for bids by ${bidderNameFilter || "this user"}`
+              : tab === "live"
+                ? "No live auctions right now"
+                : tab === "ended"
+                  ? "No ended auctions yet"
+                  : "No auctions found"}
           </h2>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             {tab === "live"
               ? "Properties appear here when their auction status is set to Live."
-              : "Completed auctions and their bid history will appear here after the auction ends."}
+              : tab === "ended"
+                ? "Completed auctions and their bid history will appear here after the auction ends."
+                : bidderIdFilter
+                  ? "Try another tab to filter live or ended auctions for this person."
+                  : "Switch tabs to view live or ended auctions."}
           </p>
           <Link
             href="/dashboard/property"
@@ -312,11 +373,19 @@ export function LiveBidMonitor() {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            {items.length} {tab === "live" ? "live" : "ended"} auction
+            {items.length}{" "}
+            {tab === "all"
+              ? "auction"
+              : tab === "live"
+                ? "live auction"
+                : "ended auction"}
             {items.length === 1 ? "" : "s"}
+            {tab === "all"
+              ? ` · ${items.filter((item) => item.auctionStage === "live").length} live · ${items.filter((item) => item.auctionStage === "ended").length} ended`
+              : null}
           </p>
           {items.map((item) => (
-            <PropertyBidCard key={item.propertyId} item={item} variant={tab} />
+            <PropertyBidCard key={item.propertyId} item={item} />
           ))}
         </div>
       )}
