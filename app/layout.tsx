@@ -25,6 +25,16 @@ export const metadata: Metadata = {
     icon: "/images/favicon.png",
     apple: "/images/favicon.png",
   },
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({
